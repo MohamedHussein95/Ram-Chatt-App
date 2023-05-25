@@ -16,6 +16,12 @@ const chatApiSlice = apiSlice.injectEndpoints({
 				method: 'GET',
 			}),
 		}),
+		getChatLastMessage: builder.mutation({
+			query: (cid) => ({
+				url: `${CHAT_URL}/messages/last/${cid}`,
+				method: 'GET',
+			}),
+		}),
 		sendMessages: builder.mutation({
 			query: ({ chatId, body }) => ({
 				url: `${CHAT_URL}/messages/send/${chatId}`,
@@ -31,6 +37,7 @@ const chatApiSlice = apiSlice.injectEndpoints({
 			}),
 		}),
 	}),
+	overrideExisting: true,
 });
 
 export const {
@@ -38,5 +45,6 @@ export const {
 	useGetChatMessagesMutation,
 	useSendMessagesMutation,
 	useCreateChatMutation,
+	useGetChatLastMessageMutation,
 } = chatApiSlice;
 export default chatApiSlice;

@@ -1,28 +1,48 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { Avatar } from 'react-native-paper';
-import moment from 'moment';
-import { Badge } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import moment from 'moment';
+import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Avatar, Badge } from 'react-native-paper';
+import Colors from '../constants/Colors';
+import { useGetChatLastMessageMutation } from '../store/chatApiSlice';
+
 const Chat = ({ chatId, status, lastMessage, sender }) => {
-	const sentTime = chatId
-		? moment(lastMessage?.createAt).format('HH:mm:ss')
-		: '';
+	const date = new Date(lastMessage?.createdAt);
+	const sentTime = chatId ? moment(date).format('HH:mm') : '';
+
+	const [getChatLastMessage] = useGetChatLastMessageMutation();
+
 	const [newMessageCount, setNewMessageCount] = useState(0);
+	const [lastMessageData, setLastMessageData] = useState(
+		lastMessage?.content?.encryptedData
+	);
 
 	const navigation = useNavigation();
-
-	//console.log(chatId, status, lastMessage, sender);
 
 	const chatStyle = {
 		padding: chatId ? 10 : 5,
 		margin: 0,
-		marginVertical: chatId ? 15 : 3,
+		marginVertical: chatId ? 0.5 : 3,
+		backgroundColor: status ? Colors.error : Colors.primary600,
 	};
-	const headerStyle = {
-		padding: 0,
-		marginBottom: 0,
-	};
+
+	const getLastMessage = useCallback(async () => {
+		try {
+			const res = await getChatLastMessage(chatId).unwrap();
+			setLastMessageData(res);
+		} catch (error) {
+			console.log(error);
+			Toast.show({
+				type: 'error',
+				text2: `${error?.data?.message || error.error}`,
+				position: 'bottom',
+			});
+		}
+	}, [chatId, getChatLastMessage]);
+
+	useEffect(() => {
+		getLastMessage();
+	}, [getLastMessage]);
 
 	return (
 		<TouchableOpacity
@@ -31,31 +51,45 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 			onPress={() => navigation.navigate('ChatScreen', { sender, chatId })}
 		>
 			{chatId ? (
-				<View>
-					<View style={styles.header}>
-						<Avatar.Image size={40} source={{ uri: sender?.avatar }} />
-						<Text style={styles.title}>{sender?.fullName}</Text>
-						<Text>{sentTime || ''}</Text>
+				<View style={styles.wrapper}>
+					<View style={styles.avatarcontainer}>
+						<Avatar.Image size={60} source={{ uri: sender?.avatar }} />
 					</View>
-					<View style={styles.messageContainer}>
-						<Text
-							numberOfLines={1}
-							ellipsizeMode='tail'
-							style={styles.message}
-						>
-							{lastMessage?.content.encryptedData}
-						</Text>
-						{newMessageCount > 0 && (
-							<Badge size={25}>{newMessageCount}</Badge>
-						)}
+					<View style={styles.header}>
+						<Text style={styles.title}>{sender?.fullName}</Text>
+						<View style={styles.messageContainer}>
+							<Text
+								numberOfLines={1}
+								ellipsizeMode='tail'
+								style={styles.message}
+							>
+								{lastMessageData}
+							</Text>
+							{newMessageCount > 0 && (
+								<Badge size={25}>{newMessageCount}</Badge>
+							)}
+						</View>
+					</View>
+					<View style={styles.timeContainer}>
+						<Text style={styles.time}>{sentTime || ''}</Text>
 					</View>
 				</View>
 			) : (
-				<View>
-					<View style={{ ...styles.header, ...headerStyle }}>
-						<Avatar.Image size={40} source={{ uri: sender?.avatar }} />
+				<View style={{ ...styles.wrapper, paddingVertical: 10 }}>
+					<View style={styles.avatarcontainer}>
+						<Avatar.Image size={60} source={{ uri: sender?.avatar }} />
+					</View>
+					<View style={styles.header}>
 						<Text style={styles.title}>{sender?.fullName}</Text>
-						<Text>{sentTime || ''}</Text>
+						<View style={styles.messageContainer}>
+							<Text
+								numberOfLines={1}
+								ellipsizeMode='tail'
+								style={styles.message}
+							>
+								{sender?.lastSeen}
+							</Text>
+						</View>
 					</View>
 				</View>
 			)}
@@ -67,28 +101,37 @@ export default Chat;
 
 const styles = StyleSheet.create({
 	chat: {
-		backgroundColor: '#abcf',
-		width: '95%',
+		width: '100%',
 		alignSelf: 'center',
-		borderRadius: 10,
+		paddingHorizontal: 10,
+	},
+	avatarcontainer: {
+		marginRight: 10,
 	},
 	header: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 15,
-		marginBottom: 10,
+		flex: 1,
 	},
 	title: {
-		flex: 1,
 		fontSize: 18,
-		fontWeight: '300',
+		color: Colors.white,
+		fontFamily: 'MEDIUM',
 	},
 	messageContainer: {
-		flexDirection: 'row',
-		width: '100%',
-		alignItems: 'center',
+		flex: 1,
 	},
 	message: {
-		flex: 1,
+		fontSize: 16,
+		color: Colors.greyScale400,
+		fontFamily: 'MEDIUM',
+	},
+	wrapper: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	timeContainer: {},
+	time: {
+		fontSize: 15,
+		color: Colors.white,
+		fontFamily: 'LIGHT',
 	},
 });

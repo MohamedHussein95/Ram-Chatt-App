@@ -4,8 +4,10 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
-import { useGetUserInfoMutation } from './store/userApiSlice';
 import { setCredentials, setDidTryAutoLogin } from './store/authSlice';
+import { useGetUserInfoMutation } from './store/userApiSlice';
+import Colors from './constants/Colors';
+
 const StartUpScreen = () => {
 	let userId = null;
 	const dispatch = useDispatch();
@@ -42,7 +44,7 @@ const StartUpScreen = () => {
 		<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 			<View>
 				<StatusBar hidden />
-				<ActivityIndicator size={'large'} color='green' />
+				<ActivityIndicator size={'large'} color={Colors.primary} />
 			</View>
 		</View>
 	);

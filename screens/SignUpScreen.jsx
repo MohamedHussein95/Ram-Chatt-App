@@ -13,7 +13,7 @@ import {
 	useTheme,
 } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
-import { useLoginMutation, useRegisterMutation } from '../store/userApiSlice';
+import { useRegisterMutation } from '../store/userApiSlice';
 import { setCredentials } from '../store/authSlice';
 import Toast from 'react-native-toast-message';
 import * as yup from 'yup';
@@ -22,25 +22,34 @@ import Input from '../components/Input';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import * as Animatable from 'react-native-animatable';
-
-const SignInValidationSchema = yup.object().shape({
+const registerValidationSchema = yup.object().shape({
+	firstName: yup.string().required('this field is required'),
+	lastName: yup.string().required('this field is required'),
 	email: yup
 		.string()
 		.email('please enter a valid email')
 		.required('this field is required'),
-	password: yup.string().required('this field is required'),
+	password: yup
+		.string()
+		.min(6, ({ min }) => `password must be atleast ${min} characters`)
+		.required('this field is required'),
+	confirmPassword: yup
+		.string()
+		.oneOf([yup.ref('password')], 'passwords do not match')
+		.required('this field is required'),
 });
-
-const SignInScreen = ({ navigation }) => {
+const SignUpScreen = ({ navigation }) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const dispatch = useDispatch();
-	const [login] = useLoginMutation();
+	const [register] = useRegisterMutation();
 	const shakeAnimaRef = useRef();
-	const submitHandler = async (email, password) => {
+	const submitHandler = async (firstName, lastName, email, password) => {
 		try {
 			setLoading(true);
-			const data = await login({
+			const data = await register({
+				firstName,
+				lastName,
 				email,
 				password,
 			}).unwrap();
@@ -48,8 +57,8 @@ const SignInScreen = ({ navigation }) => {
 			dispatch(setCredentials({ user: { ...data } }));
 			Toast.show({
 				type: 'success',
-				text1: 'Signed In',
-				text2: `Start Chatting`,
+				text1: 'Successfully Registered!',
+				text2: `Welcome ${data.fullName},you can start chatting now`,
 				position: 'bottom',
 			});
 		} catch (error) {
@@ -74,12 +83,20 @@ const SignInScreen = ({ navigation }) => {
 				<Text style={styles.title}>Ram Chatt</Text>
 				<Formik
 					initialValues={{
+						firstName: '',
+						lastName: '',
 						email: '',
 						password: '',
+						confirmPassword: '',
 					}}
-					validationSchema={SignInValidationSchema}
+					validationSchema={registerValidationSchema}
 					onSubmit={(values) =>
-						submitHandler(values.email, values.password)
+						submitHandler(
+							values.firstName,
+							values.lastName,
+							values.email,
+							values.password
+						)
 					}
 				>
 					{({
@@ -93,6 +110,34 @@ const SignInScreen = ({ navigation }) => {
 						isValid,
 					}) => (
 						<View style={styles.formContainer}>
+							<Input
+								name='firstName'
+								placeholder={'First Name'}
+								onChangeText={handleChange('firstName')}
+								onBlur={handleBlur('firstName')}
+								value={values.firstName}
+								keyboardType='default'
+								IconPack={Ionicons}
+								icon='person'
+								errors={errors.firstName}
+								touched={touched.firstName}
+								autoCapitalize='none'
+								autoCorrect={true}
+							/>
+							<Input
+								name='lastName'
+								placeholder={'Last Name'}
+								onChangeText={handleChange('lastName')}
+								onBlur={handleBlur('lastName')}
+								value={values.lastName}
+								keyboardType='default'
+								IconPack={Ionicons}
+								icon='person'
+								errors={errors.lastName}
+								touched={touched.lastName}
+								autoCapitalize='none'
+								autoCorrect={true}
+							/>
 							<Input
 								name='email'
 								placeholder={'Email Adress'}
@@ -124,6 +169,23 @@ const SignInScreen = ({ navigation }) => {
 								autoCapitalize='none'
 								autoCorrect={false}
 							/>
+							<Input
+								name='confirmPassword'
+								placeholder={'Confirm Password'}
+								onChangeText={handleChange('confirmPassword')}
+								onBlur={handleBlur('confirmPassword')}
+								value={values.confirmPassword}
+								keyboardType='default'
+								secureTextEntry={showPassword ? false : true}
+								iconRight={showPassword ? 'eye' : 'eye-off'}
+								IconPack={Ionicons}
+								icon='lock-closed'
+								onPressIconRight={() => setShowPassword(!showPassword)}
+								errors={errors.confirmPassword}
+								touched={touched.confirmPassword}
+								autoCapitalize='none'
+								autoCorrect={false}
+							/>
 
 							<Animatable.View
 								ref={shakeAnimaRef}
@@ -149,7 +211,7 @@ const SignInScreen = ({ navigation }) => {
 											}
 										}}
 									>
-										<Text style={styles.buttonText}>Sign In</Text>
+										<Text style={styles.buttonText}>Sign Up</Text>
 									</TouchableOpacity>
 								)}
 							</Animatable.View>
@@ -159,17 +221,17 @@ const SignInScreen = ({ navigation }) => {
 
 				<Text
 					style={{ marginVertical: 15, textAlign: 'center' }}
-					onPress={() => navigation.replace('SignUpScreen')}
+					onPress={() => navigation.replace('SignInScreen')}
 				>
-					Don't Have an account?
-					<Text style={{ color: 'red' }}>Sign Up</Text>
+					Have an account already?
+					<Text style={{ color: 'red' }}>Sign In</Text>
 				</Text>
 			</ScrollView>
 		</View>
 	);
 };
 
-export default SignInScreen;
+export default SignUpScreen;
 
 const styles = StyleSheet.create({
 	screen: {
