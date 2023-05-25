@@ -26,7 +26,7 @@ import {
 import Colors from '../constants/Colors';
 import Message from '../components/Message';
 
-import backgroundImage from '../assets/images/background/wallpaper2.jpg';
+import backgroundImage from '../assets/images/background/wallpaper8.jpg';
 const ChatScreen = ({ route, navigation }) => {
 	const { sender, chatId } = route.params;
 	const { userInfo } = useSelector((state) => state.auth);
@@ -49,7 +49,6 @@ const ChatScreen = ({ route, navigation }) => {
 			if (cId) {
 				const res = await getChatMessages(chatId).unwrap();
 				setChatMessages(res);
-				console.log(res);
 			}
 			setRefreshing(false);
 		} catch (error) {
@@ -64,15 +63,8 @@ const ChatScreen = ({ route, navigation }) => {
 	}, [cId, chatId, getChatMessages]);
 
 	const sendMessage = async () => {
-		console.log(cId);
 		try {
 			setMessage('');
-
-			chatMessages.push({
-				id: '54845484548',
-				content: message,
-				sender: userInfo?._id,
-			});
 
 			const body = {
 				sender: userInfo?._id,
@@ -111,7 +103,9 @@ const ChatScreen = ({ route, navigation }) => {
 
 	useEffect(() => {
 		if (cId) {
-			getMessages();
+			getMessages()
+				.then(() => console.log('fetched messages'))
+				.catch((err) => console.log(err));
 		}
 	}, [cId, chatId, dispatch, getMessages]);
 
@@ -271,5 +265,6 @@ const styles = StyleSheet.create({
 	},
 	backgroundImage: {
 		flex: 1,
+		resizeMode: 'cover',
 	},
 });

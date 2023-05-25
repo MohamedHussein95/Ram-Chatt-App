@@ -29,13 +29,13 @@ const Message = ({ item, text }) => {
 			break;
 		case 'myMessage':
 			wrapperStyle.justifyContent = 'flex-end';
-			MessageStyle.backgroundColor = Colors.primary500;
+			MessageStyle.backgroundColor = Colors.primary600;
 			MessageStyle.maxWidth = '90%';
 			break;
 		case 'theirMessage':
 			wrapperStyle.justifyContent = 'flex-start';
 			MessageStyle.maxWidth = '90%';
-			MessageStyle.backgroundColor = Colors.primary600;
+			MessageStyle.backgroundColor = Colors.greyScale800;
 			break;
 
 		default:

@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
 import { pickImageAsync } from '../utils/ImagePicker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useCreatePostMutation } from '../store/postApiSlice';
+import { useSelector } from 'react-redux';
 
 const BOTTOM_APPBAR_HEIGHT = 50;
 
@@ -21,9 +23,32 @@ const CreatePostScreen = ({ navigation }) => {
 	const [bodyText, setBodyText] = useState('');
 	const [url, setUrl] = useState('');
 	const [photo, setPhoto] = useState();
-
+	const { userInfo } = useSelector((state) => state.auth);
 	const { bottom } = useSafeAreaInsets();
-	const theme = useTheme();
+	const [loading, setLoading] = useState(false);
+
+	const [createPost] = useCreatePostMutation();
+
+	const createAPost = async () => {
+		try {
+			setLoading(true);
+			setTitle('');
+			setBodyText('');
+			setUrl('');
+			const data = {
+				createdBy: userInfo?._id,
+				title: title,
+				body: {
+					text: bodyText,
+				},
+			};
+			const res = await createPost(data);
+			console.log(res);
+		} catch (error) {
+			setLoading(false);
+			console.log(error);
+		}
+	};
 
 	const handleImageUpload = async () => {
 		try {
@@ -55,6 +80,7 @@ const CreatePostScreen = ({ navigation }) => {
 					}}
 					textColor={Colors.white}
 					disabled={title.length <= 0}
+					onPress={createAPost}
 				>
 					Post
 				</Button>

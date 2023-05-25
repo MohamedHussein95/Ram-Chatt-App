@@ -7,7 +7,12 @@ import UserDetailsScreen from '../screens/UserDetailsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import NewChatScreen from '../screens/NewChatScreen';
 import Colors from '../constants/Colors';
-import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import {
+	AntDesign,
+	Ionicons,
+	MaterialCommunityIcons,
+	MaterialIcons,
+} from '@expo/vector-icons';
 import ExploreScreen from '../screens/ExploreScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import { useSelector } from 'react-redux';
@@ -37,9 +42,13 @@ const TabStack = () => {
 						iconName = focused ? 'person' : 'person-outline';
 						return <Ionicons name={iconName} size={size} color={color} />;
 					} else if (route.name === 'ExploreScreen') {
-						iconName = focused ? 'video-library' : 'video-library';
+						iconName = focused ? 'compass' : 'compass-outline';
 						return (
-							<MaterialIcons name={iconName} size={size} color={color} />
+							<MaterialCommunityIcons
+								name={iconName}
+								size={size}
+								color={color}
+							/>
 						);
 					} else if (route.name === 'CreatePostScreen') {
 						iconName = focused ? 'pluscircle' : 'pluscircleo';

@@ -15,6 +15,9 @@ const chatSlice = createSlice({
 		setChatMessages: (state, action) => {
 			state.messages.unshift(action.payload);
 		},
+		clearChats: (state) => {
+			state.chats = null;
+		},
 	},
 });
 
