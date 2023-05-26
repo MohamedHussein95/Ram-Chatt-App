@@ -5,6 +5,8 @@ import Colors from '../constants/Colors';
 import Post from '../components/Post';
 import { useGetAllPostsMutation } from '../store/postApiSlice';
 
+import socket from '../utils/socket';
+
 const HomeScreen = () => {
 	const [posts, setPost] = useState([]);
 	const [refreshing, setRefreshing] = useState(false);
@@ -53,6 +55,7 @@ export default HomeScreen;
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
+		backgroundColor: Colors.primary600,
 	},
 	header: {
 		backgroundColor: Colors.primary,

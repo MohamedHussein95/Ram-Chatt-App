@@ -7,8 +7,9 @@ export default {
 	primary300: '#8e93be',
 	primary400: '#777db1',
 	primary500: '#6167a4',
-	primary600: '#0a1056',
-
+	primary600: '#0a0c28',
+	liked: '#3542dc',
+	disliked: '#6d6f84',
 	success: '#4ADE80',
 	info: '#246BFD',
 	warning: '#FACC15',

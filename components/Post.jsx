@@ -9,14 +9,14 @@ const Post = ({ item }) => {
 	const [liked, setLiked] = useState(false);
 	const [disliked, setDisliked] = useState(false);
 	const date = new Date(item?.createdAt);
-	const createdAt = moment(date).fromNow();
+	const createdAt = moment(date).fromNow(true);
 
 	return (
 		<View style={styles.post}>
 			<View style={styles.header}>
 				<View style={styles.avatarContainer}>
 					<Avatar.Image
-						size={45}
+						size={30}
 						source={{ uri: item?.createdBy?.avatar }}
 					/>
 					<View style={{ width: '50%' }}>
@@ -46,9 +46,9 @@ const Post = ({ item }) => {
 			</View>
 			<View style={styles.footer}>
 				<MaterialCommunityIcons
-					name={liked && !disliked ? 'thumb-up' : 'thumb-up-outline'}
+					name={!liked && !disliked ? 'thumb-up' : 'thumb-up-outline'}
 					size={30}
-					color={Colors.primary400}
+					color={Colors.liked}
 				/>
 				<Text style={styles.footerText}>
 					{item?.metaData?.likes?.length}
@@ -75,7 +75,9 @@ const Post = ({ item }) => {
 					size={35}
 					color={Colors.primary400}
 				/>
-				<Text style={styles.footerText}>{'12'}</Text>
+				<Text style={styles.footerText}>
+					{item?.metaData?.shares?.length || '0'}
+				</Text>
 			</View>
 		</View>
 	);
@@ -88,10 +90,8 @@ const styles = StyleSheet.create({
 		marginVertical: 0,
 		width: '100%',
 		alignSelf: 'center',
-
 		overflow: 'hidden',
 		backgroundColor: Colors.primary600,
-		padding: 10,
 		borderBottomColor: Colors.greyScale700,
 		borderBottomWidth: 1,
 	},
@@ -99,7 +99,9 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 10,
-		padding: 10,
+		paddingTop: 5,
+		paddingLeft: 15,
+		marginBottom: 5,
 	},
 	menu: {},
 	avatarContainer: {
@@ -109,7 +111,7 @@ const styles = StyleSheet.create({
 	},
 	userName: {
 		fontSize: 14,
-		marginRight: 25,
+		marginRight: 20,
 		marginLeft: 5,
 		color: Colors.primary400,
 		fontFamily: 'REGULAR',
@@ -117,10 +119,9 @@ const styles = StyleSheet.create({
 	time: { fontFamily: 'REGULAR', fontSize: 12, color: Colors.primary400 },
 	body: {
 		paddingHorizontal: 15,
-		paddingBottom: 10,
 	},
 	title: {
-		fontSize: 24,
+		fontSize: 20,
 		fontFamily: 'SEMI_BOLD',
 		color: Colors.white,
 	},
@@ -135,6 +136,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		paddingHorizontal: 15,
+		marginBottom: 5,
 	},
 	footerText: {
 		color: Colors.primary400,

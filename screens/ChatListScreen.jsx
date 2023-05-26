@@ -9,12 +9,13 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import Chat from '../components/Chat';
 import Colors from '../constants/Colors';
 import { StatusBar } from 'expo-status-bar';
+
 const ChatListScreen = ({ navigation }) => {
 	const { userInfo } = useSelector((state) => state.auth);
 	const { chats } = useSelector((state) => state.chat) || {};
 	const [state, setState] = useState({ open: false });
 	const [refreshing, setRefreshing] = useState(false);
-	//console.log(chats);
+
 	const onStateChange = ({ open }) => setState({ open });
 
 	const { open } = state;

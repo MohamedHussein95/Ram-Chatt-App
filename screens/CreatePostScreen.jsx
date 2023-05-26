@@ -57,9 +57,9 @@ const CreatePostScreen = ({ navigation }) => {
 
 			//set image
 			setPhoto(image);
-			console.log(image);
+			const ImageName = image.split('/').pop();
+			console.log(ImageName);
 		} catch (error) {
-			setIsLoading(false);
 			console.log(error);
 		}
 	};

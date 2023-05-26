@@ -1,76 +1,66 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import React, { memo } from 'react';
+import moment from 'moment/moment';
 import { useSelector } from 'react-redux';
 import Colors from '../constants/Colors';
 
-const Message = ({ item, text }) => {
-	const sender = item?.sender;
-	const content = item?.content;
+const Message = ({ item }) => {
+	const { sender, content, createdAt } = item;
+	const date = new Date(createdAt);
+	const sentTime = moment(date).format('HH:mm');
 	const { userInfo } = useSelector((state) => state.auth);
-	const MessageStyle = { ...styles.container };
-	const textStyle = { ...styles.text };
-	const wrapperStyle = { ...styles.wrapperStyle };
-
-	const type =
-		sender && sender === userInfo._id ? 'myMessage' : 'theirMessage';
-
-	switch (type) {
-		case 'system':
-			textStyle.color = '#65644A';
-			MessageStyle.backgroundColor = Colors.beige;
-			MessageStyle.alignItems = 'center';
-			MessageStyle.marginTop = 10;
-
-			break;
-		case 'error':
-			MessageStyle.backgroundColor = Colors.RED;
-			textStyle.color = 'white';
-			MessageStyle.marginTop = 10;
-			break;
-		case 'myMessage':
-			wrapperStyle.justifyContent = 'flex-end';
-			MessageStyle.backgroundColor = Colors.primary600;
-			MessageStyle.maxWidth = '90%';
-			break;
-		case 'theirMessage':
-			wrapperStyle.justifyContent = 'flex-start';
-			MessageStyle.maxWidth = '90%';
-			MessageStyle.backgroundColor = Colors.greyScale800;
-			break;
-
-		default:
-			break;
-	}
+	const status = sender !== userInfo?._id;
 
 	return (
-		<View style={wrapperStyle}>
-			<View style={MessageStyle}>
-				<Text style={textStyle}>{content || text}</Text>
+		<View>
+			<View
+				style={
+					status
+						? styles.mmessageWrapper
+						: [styles.mmessageWrapper, { alignItems: 'flex-end' }]
+				}
+			>
+				<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+					<View
+						style={
+							status
+								? styles.mmessage
+								: [
+										styles.mmessage,
+										{ backgroundColor: Colors.primary500 },
+								  ]
+						}
+					>
+						<Text style={styles.content}>{content}</Text>
+					</View>
+				</View>
+				<Text style={{ color: Colors.white, marginHorizontal: 15 }}>
+					{sentTime}
+				</Text>
 			</View>
 		</View>
 	);
 };
 
+export default memo(Message);
+
 const styles = StyleSheet.create({
-	wrapperStyle: {
-		flexDirection: 'row',
-		justifyContent: 'center',
-		alignItems: 'center',
+	mmessageWrapper: {
+		width: '100%',
+		alignItems: 'flex-start',
+		marginBottom: 15,
 	},
-	container: {
-		backgroundColor: 'white',
-		borderRadius: 6,
-		padding: 20,
-		marginBottom: 10,
-		borderColor: '#E2DACC',
-		borderWidth: 0,
-		margin: 10,
+	mmessage: {
+		maxWidth: '50%',
+		backgroundColor: Colors.greyScale700,
+		padding: 15,
+		borderRadius: 10,
+		marginBottom: 2,
+		marginHorizontal: 10,
 	},
-	text: {
-		letterSpacing: 0.3,
-		fontSize: 16,
+	content: {
 		color: Colors.white,
+		fontFamily: 'MEDIUM',
+		fontSize: 15,
 	},
 });
-
-export default Message;

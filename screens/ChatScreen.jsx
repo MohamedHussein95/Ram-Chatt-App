@@ -9,6 +9,7 @@ import {
 	FlatList,
 	ImageBackground,
 	StyleSheet,
+	Text,
 	TextInput,
 	View,
 } from 'react-native';
@@ -27,6 +28,10 @@ import Colors from '../constants/Colors';
 import Message from '../components/Message';
 
 import backgroundImage from '../assets/images/background/wallpaper8.jpg';
+
+//👇🏻 Import socket from the socket.js file in utils folder
+import socket from '../utils/socket';
+
 const ChatScreen = ({ route, navigation }) => {
 	const { sender, chatId } = route.params;
 	const { userInfo } = useSelector((state) => state.auth);
@@ -43,7 +48,7 @@ const ChatScreen = ({ route, navigation }) => {
 	const [sendMessages] = useSendMessagesMutation();
 	const [createChat] = useCreateChatMutation();
 
-	const getMessages = useCallback(async () => {
+	const getMessages = async () => {
 		try {
 			setRefreshing(true);
 			if (cId) {
@@ -60,9 +65,9 @@ const ChatScreen = ({ route, navigation }) => {
 				position: 'bottom',
 			});
 		}
-	}, [cId, chatId, getChatMessages]);
+	};
 
-	const sendMessage = async () => {
+	const sendMessage = useCallback(async () => {
 		try {
 			setMessage('');
 
@@ -75,6 +80,9 @@ const ChatScreen = ({ route, navigation }) => {
 					chatId: cId,
 					body,
 				}).unwrap();
+
+				//👇🏻 sends a message to the server
+				socket.emit('send-message', chatId, sender?._id);
 			} else {
 				//create the chat and update the cId
 				const newBody = {
@@ -93,7 +101,7 @@ const ChatScreen = ({ route, navigation }) => {
 				position: 'top',
 			});
 		}
-	};
+	}, [message, userInfo, cId, socket]);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -104,10 +112,36 @@ const ChatScreen = ({ route, navigation }) => {
 	useEffect(() => {
 		if (cId) {
 			getMessages()
-				.then(() => console.log('fetched messages'))
+				.then(() => {})
 				.catch((err) => console.log(err));
 		}
-	}, [cId, chatId, dispatch, getMessages]);
+	}, [cId, chatId, dispatch]);
+
+	useEffect(() => {
+		// Listen for the 'new-message' event
+		socket.on('new-message', async (_, sId) => {
+			// Update the chatMessages state with the latest messages if the updated chatId matches the current chatId
+			if (sId === userInfo?._id) {
+				console.log('yes');
+				try {
+					const res = await getChatMessages(chatId).unwrap();
+					setChatMessages(res);
+				} catch (error) {
+					console.log(error);
+					Toast.show({
+						type: 'error',
+						text2: `${error?.data?.message || error.error}`,
+						position: 'bottom',
+					});
+				}
+			}
+		});
+
+		// Cleanup the event listener on component unmount
+		return () => {
+			socket.off('new-message');
+		};
+	});
 
 	return (
 		<View style={styles.screen}>
@@ -147,16 +181,31 @@ const ChatScreen = ({ route, navigation }) => {
 				source={backgroundImage}
 				style={styles.backgroundImage}
 			>
+				<View
+					style={{
+						width: '80%',
+						alignSelf: 'center',
+						marginTop: 10,
+						opacity: 0.5,
+						backgroundColor: 'transparent',
+					}}
+				>
+					<Text style={styles.disclaimer}>
+						Messages are end-to-end encrypted. Not even Ramchatt can see
+						them
+					</Text>
+				</View>
 				<FlatList
 					onRefresh={getMessages}
 					refreshing={refreshing}
 					data={chatMessages}
 					renderItem={({ item }) => <Message item={item} />}
 					keyExtractor={(item) => item._id}
-					style={{ flex: 1 }}
+					style={{ flex: 1, marginBottom: 80, marginTop: 10 }}
 					contentContainerStyle={{
 						justifyContent: 'center',
 					}}
+					sc
 				/>
 			</ImageBackground>
 
@@ -187,7 +236,6 @@ const ChatScreen = ({ route, navigation }) => {
 							autoCapitalize='words'
 							autoComplete='name'
 							autoCorrect
-							autoFocus
 							multiline={true}
 							onChangeText={(text) => setMessage(text)}
 							value={message}
@@ -266,5 +314,9 @@ const styles = StyleSheet.create({
 	backgroundImage: {
 		flex: 1,
 		resizeMode: 'cover',
+	},
+	disclaimer: {
+		textAlign: 'center',
+		color: Colors.greyScale600,
 	},
 });
