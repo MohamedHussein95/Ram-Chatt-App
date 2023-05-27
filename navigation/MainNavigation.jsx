@@ -16,6 +16,8 @@ import {
 import ExploreScreen from '../screens/ExploreScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import { useSelector } from 'react-redux';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import PostDetailsScreen from '../screens/PostDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -52,11 +54,13 @@ const TabStack = () => {
 						);
 					} else if (route.name === 'CreatePostScreen') {
 						iconName = focused ? 'pluscircle' : 'pluscircleo';
-						return <AntDesign name={iconName} size={24} color={color} />;
+						return (
+							<AntDesign name={iconName} size={size} color={color} />
+						);
 					}
 				},
 				tabBarActiveTintColor: Colors.white,
-				tabBarInactiveTintColor: Colors.greyScale500,
+				tabBarInactiveTintColor: Colors.greyScale600,
 				headerShown: false,
 				tabBarStyle: {
 					paddingVertical: 5,
@@ -66,10 +70,7 @@ const TabStack = () => {
 				tabBarItemStyle: {
 					marginBottom: 5,
 				},
-				tabBarLabelStyle: {
-					fontSize: 14,
-					fontWeight: '500',
-				},
+				tabBarLabelStyle: {},
 				tabBarHideOnKeyboard: true,
 			})}
 		>
@@ -130,6 +131,15 @@ const TabStack = () => {
 	);
 };
 
+const TopTab = createMaterialTopTabNavigator();
+const ChatStack = () => {
+	return (
+		<TopTab.Navigator>
+			<TopTab.Screen name='ChatListScreen' component={ChatListScreen} />
+		</TopTab.Navigator>
+	);
+};
+
 function MainStack() {
 	return (
 		<Stack.Navigator
@@ -142,6 +152,7 @@ function MainStack() {
 			<Stack.Screen name='ChatScreen' component={ChatScreen} />
 			<Stack.Screen name='NewChatScreen' component={NewChatScreen} />
 			<Stack.Screen name='UserDetailsScreen' component={UserDetailsScreen} />
+			<Stack.Screen name='PostDetailsScreen' component={PostDetailsScreen} />
 		</Stack.Navigator>
 	);
 }

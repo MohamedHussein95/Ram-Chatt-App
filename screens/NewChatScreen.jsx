@@ -5,6 +5,7 @@ import {
 	View,
 	TextInput,
 	ActivityIndicator,
+	TouchableOpacity,
 } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -12,18 +13,19 @@ import {
 	useSearchUserMutation,
 	useSearchUserQuery,
 } from '../store/userApiSlice';
-import { Toast } from 'react-native-toast-message/lib/src/Toast';
+
 import Chat from '../components/Chat';
 import { useSelector } from 'react-redux';
 import { Appbar } from 'react-native-paper';
 import Colors from '../constants/Colors';
 import { StatusBar } from 'expo-status-bar';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const NewChatScreen = ({ navigation }) => {
 	const [searchPhrase, setSearchPhrase] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [users, setUsers] = useState([]);
+	const [error, setError] = useState('');
 	const [emptyResult, setEmptyResult] = useState(false);
 	const [searching, setSearching] = useState(false);
 	const { userInfo } = useSelector((state) => state.auth);
@@ -40,17 +42,25 @@ const NewChatScreen = ({ navigation }) => {
 
 			const res = await searchUsers({ Id, user: searchPhrase }).unwrap();
 
-			setUsers(res);
-			console.log(res);
-			if (res.length === 0) {
+			if (res?.message) {
 				setEmptyResult(true);
+				setUsers();
+				setError(message);
+				setLoading(false);
 			} else {
-				setEmptyResult(false);
+				setUsers(res);
+
+				if (res.length === 0) {
+					setEmptyResult(true);
+				} else {
+					setEmptyResult(false);
+				}
+				setLoading(false);
 			}
-			setLoading(false);
 		} catch (error) {
 			setUsers();
 			setEmptyResult(true);
+			setError(error?.data?.message || error.error);
 			setLoading(false);
 			console.log(error);
 		}
@@ -99,19 +109,38 @@ const NewChatScreen = ({ navigation }) => {
 					/>
 				)}
 			</Appbar.Header>
-			{!searchPhrase && (
-				<Appbar.Header style={styles.secondHeader}>
-					<Appbar.Action
-						icon='account-multiple'
-						onPress={() => setSearchPhrase('')}
-						color={Colors.white}
-						size={30}
-					/>
-					<Appbar.Content title='New Group' color={Colors.white} />
-				</Appbar.Header>
+			{!searchPhrase && !users && !loading && (
+				<View>
+					<TouchableOpacity
+						style={styles.secondHeader}
+						activeOpacity={0.8}
+						onPress={() => {}}
+					>
+						<MaterialCommunityIcons
+							name='account-multiple'
+							size={40}
+							color={Colors.white}
+						/>
+						<Text
+							style={{
+								fontFamily: 'MEDIUM',
+								fontSize: 18,
+								color: Colors.white,
+							}}
+						>
+							New Group
+						</Text>
+					</TouchableOpacity>
+				</View>
 			)}
 			{loading && (
-				<View style={{ flex: 1 }}>
+				<View
+					style={{
+						flex: 1,
+						justifyContent: 'center',
+						alignItems: 'center',
+					}}
+				>
 					<ActivityIndicator size='large' color={Colors.primary} />
 				</View>
 			)}
@@ -150,7 +179,9 @@ const NewChatScreen = ({ navigation }) => {
 						color={Colors.disabled}
 						style={styles.noResultIcon}
 					/>
-					<Text style={styles.noResultText}>No users found!</Text>
+					<Text style={styles.noResultText}>
+						{error || 'No users found!'}{' '}
+					</Text>
 				</View>
 			)}
 		</View>
@@ -168,6 +199,11 @@ const styles = StyleSheet.create({
 	},
 	secondHeader: {
 		backgroundColor: Colors.primary200,
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 15,
+		paddingHorizontal: 20,
+		paddingVertical: 10,
 	},
 	search: {
 		flex: 1,

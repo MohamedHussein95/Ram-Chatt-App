@@ -1,22 +1,19 @@
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Appbar, Button, FAB, Portal } from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
-import { clearCredentials } from '../store/authSlice';
-import { useGetUserChatsMutation } from '../store/chatApiSlice';
-import { setUserChats } from '../store/chatSlice';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { Appbar, FAB } from 'react-native-paper';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import { useDispatch, useSelector } from 'react-redux';
 import Chat from '../components/Chat';
 import Colors from '../constants/Colors';
-import { StatusBar } from 'expo-status-bar';
+import { useGetUserChatsMutation } from '../store/chatApiSlice';
+import { setUserChats } from '../store/chatSlice';
 
 const ChatListScreen = ({ navigation }) => {
 	const { userInfo } = useSelector((state) => state.auth);
 	const { chats } = useSelector((state) => state.chat) || {};
 	const [state, setState] = useState({ open: false });
 	const [refreshing, setRefreshing] = useState(false);
-
-	const onStateChange = ({ open }) => setState({ open });
 
 	const { open } = state;
 	const dispatch = useDispatch();
@@ -51,8 +48,27 @@ const ChatListScreen = ({ navigation }) => {
 			<Appbar.Header style={styles.header}>
 				<Appbar.Content title='Ram Chatt' color={Colors.white} />
 			</Appbar.Header>
-			{chats.length <= 0 ? (
-				<Text>You have no chats</Text>
+			{Object.values(chats).length <= 0 ? (
+				<View
+					style={{
+						flex: 1,
+						justifyContent: 'center',
+						alignItems: 'center',
+					}}
+				>
+					<View
+						style={{
+							width: '45%',
+
+							alignItems: 'center',
+							justifyContent: 'center',
+						}}
+					>
+						<Text style={styles.noChats}>
+							You have no chats. Tap the '+' to create one
+						</Text>
+					</View>
+				</View>
 			) : (
 				<FlatList
 					onRefresh={getChats}
@@ -89,6 +105,7 @@ export default ChatListScreen;
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
+		backgroundColor: Colors.dark2,
 	},
 	fab: {
 		position: 'absolute',
@@ -100,5 +117,11 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		backgroundColor: Colors.primary,
+	},
+	noChats: {
+		fontSize: 14,
+		fontFamily: 'MEDIUM',
+		color: Colors.greyScale500,
+		textAlign: 'center',
 	},
 });

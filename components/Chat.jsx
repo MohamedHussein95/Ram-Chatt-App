@@ -5,6 +5,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Avatar, Badge } from 'react-native-paper';
 import Colors from '../constants/Colors';
 import { useGetChatLastMessageMutation } from '../store/chatApiSlice';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 
 const Chat = ({ chatId, status, lastMessage, sender }) => {
 	const date = new Date(lastMessage?.createdAt);
@@ -22,14 +23,16 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 	const chatStyle = {
 		padding: chatId ? 10 : 5,
 		margin: 0,
-		marginVertical: chatId ? 0.5 : 3,
+		marginVertical: chatId ? 0.5 : 0.5,
 		backgroundColor: status ? Colors.error : Colors.primary600,
 	};
 
 	const getLastMessage = useCallback(async () => {
 		try {
-			const res = await getChatLastMessage(chatId).unwrap();
-			setLastMessageData(res);
+			if (chatId) {
+				const res = await getChatLastMessage(chatId).unwrap();
+				setLastMessageData(res);
+			}
 		} catch (error) {
 			console.log(error);
 			Toast.show({
@@ -75,19 +78,28 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 					</View>
 				</View>
 			) : (
-				<View style={{ ...styles.wrapper, paddingVertical: 10 }}>
+				<View
+					style={{
+						...styles.wrapper,
+						...{
+							elevation: 2,
+						},
+					}}
+				>
 					<View style={styles.avatarcontainer}>
-						<Avatar.Image size={60} source={{ uri: sender?.avatar }} />
+						<Avatar.Image size={40} source={{ uri: sender?.avatar }} />
 					</View>
 					<View style={styles.header}>
-						<Text style={styles.title}>{sender?.fullName}</Text>
+						<Text style={{ ...styles.title, ...{ fontSize: 15 } }}>
+							{sender?.fullName}
+						</Text>
 						<View style={styles.messageContainer}>
 							<Text
 								numberOfLines={1}
 								ellipsizeMode='tail'
-								style={styles.message}
+								style={{ ...styles.message, ...{ fontSize: 12 } }}
 							>
-								{sender?.lastSeen}
+								{sender?.lastSeen || 'last seen recently'}
 							</Text>
 						</View>
 					</View>

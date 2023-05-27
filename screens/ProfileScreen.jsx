@@ -29,9 +29,13 @@ import Input from '../components/Input';
 import ProfileSetting from '../components/ProfileSetting';
 import Colors from '../constants/Colors';
 import { clearCredentials, updateUserBio } from '../store/authSlice';
-import { useLogoutMutation, useUpdateBioMutation } from '../store/userApiSlice';
-import TabViewExample from '../components/TabView';
-import PostTabviews from '../components/TabView';
+import {
+	useLogoutMutation,
+	useUpdateBioMutation,
+	useUploadProfileMutation,
+} from '../store/userApiSlice';
+import { pickImageAsync } from '../utils/ImagePicker';
+
 const ProfileScreen = ({ navigation }) => {
 	const { userInfo } = useSelector((state) => state.auth);
 	const [visible, setVisible] = useState(false);
@@ -42,6 +46,7 @@ const ProfileScreen = ({ navigation }) => {
 	const shakeAnimaRef = useRef();
 	const [updateBio] = useUpdateBioMutation();
 	const [logOut] = useLogoutMutation();
+	const [photo, setPhoto] = useState(userInfo?.avatar);
 
 	const showModal = () => setVisible(true);
 	const hideModal = () => setVisible(false);
@@ -88,7 +93,25 @@ const ProfileScreen = ({ navigation }) => {
 		const initialStatus = await sound.getStatusAsync();
 		setIsSoundPlaying(initialStatus.isPlaying);
 	}
+	const [uploadProfile] = useUploadProfileMutation();
+	const handleProfileUpload = async () => {
+		try {
+			const image = await pickImageAsync();
+			if (!image) return;
 
+			//set image
+			setPhoto(image);
+
+			const res = await uploadProfile({
+				id: userInfo?._id,
+				file: image,
+			}).unwrap();
+
+			console.log(res);
+		} catch (error) {
+			console.log(error);
+		}
+	};
 	useEffect(() => {
 		if (isSoundPlaying) {
 			// If sound is currently playing, play the animation
@@ -194,7 +217,12 @@ const ProfileScreen = ({ navigation }) => {
 					</Modal>
 				</View>
 				<View style={styles.profileHeaderContainer}>
-					<Avatar.Image source={{ uri: userInfo?.avatar }} size={120} />
+					<TouchableOpacity
+						activeOpacity={0.8}
+						onPress={handleProfileUpload}
+					>
+						<Avatar.Image source={{ uri: photo }} size={120} />
+					</TouchableOpacity>
 					<Text style={styles.title}>{userInfo?.fullName}</Text>
 					<Text style={styles.content}>{userInfo?.email}</Text>
 					<View style={styles.profileDataContainer}>
@@ -206,7 +234,7 @@ const ProfileScreen = ({ navigation }) => {
 									fontSize: 24,
 								}}
 							>
-								{userInfo?.profileData?.postCount?.length}
+								{userInfo?.profileData?.posts?.length}
 							</Text>
 							<Text style={styles.profileDataText}>Posts</Text>
 						</View>
@@ -314,7 +342,6 @@ const ProfileScreen = ({ navigation }) => {
 					</TouchableOpacity>
 				</View>
 				<Divider />
-				<PostTabviews />
 			</ScrollView>
 		</View>
 	);
@@ -325,7 +352,7 @@ export default ProfileScreen;
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
-		backgroundColor: Colors.white,
+		backgroundColor: Colors.dark2,
 	},
 	headerContainer: {
 		backgroundColor: Colors.primary,

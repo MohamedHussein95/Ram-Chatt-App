@@ -1,6 +1,6 @@
 import apiSlice from './apiSlice';
 
-const USERS_URL = '/api/users';
+const USERS_URL = '/users';
 
 const usersApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -42,15 +42,16 @@ const usersApiSlice = apiSlice.injectEndpoints({
 			}),
 		}),
 		uploadProfile: builder.mutation({
-			query: ({ Id, file }) => ({
-				url: `${USERS_URL}/upload_profile/${Id}`,
+			query: ({ id, file }) => ({
+				url: `${USERS_URL}/upload_profile/${id}`,
 				method: 'PUT',
 				headers: {
-					'content-type': 'application/json',
+					'Content-Type': 'image/jpeg',
 				},
 				body: file,
 			}),
 		}),
+
 		updateBio: builder.mutation({
 			query: ({ id, body }) => ({
 				url: `${USERS_URL}/bio/${id}`,

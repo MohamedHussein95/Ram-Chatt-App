@@ -1,14 +1,11 @@
+import { useFonts } from 'expo-font';
 import 'react-native-gesture-handler';
-import Toast from 'react-native-toast-message';
 import { PaperProvider } from 'react-native-paper';
+import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';
+import fonts from './constants/Fonts';
 import AppNavigation from './navigation/AppNavigation';
 import store from './store/store';
-import theme from './theme';
-import * as SplashScreen from 'expo-splash-screen';
-import fonts from './constants/Fonts';
-import { useCallback } from 'react';
-import { useFonts } from 'expo-font';
 
 export default function App() {
 	const [fontsLoaded] = useFonts(fonts);
@@ -23,7 +20,7 @@ export default function App() {
 	return (
 		<>
 			<Provider store={store}>
-				<PaperProvider theme={theme()}>
+				<PaperProvider>
 					<AppNavigation />
 				</PaperProvider>
 			</Provider>

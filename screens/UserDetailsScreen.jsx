@@ -265,6 +265,7 @@ export default UserDetailsScreen;
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
+		backgroundColor: Colors.dark2,
 	},
 	headerContainer: {
 		backgroundColor: Colors.primary,

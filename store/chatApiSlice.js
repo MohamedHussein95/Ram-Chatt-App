@@ -1,6 +1,6 @@
 import apiSlice from './apiSlice';
 
-const CHAT_URL = '/api/chats';
+const CHAT_URL = '/chats';
 
 const chatApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({

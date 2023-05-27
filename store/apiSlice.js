@@ -1,11 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const baseQuery = fetchBaseQuery({ baseUrl: 'http://192.168.0.102:5000' });
+const baseQuery = fetchBaseQuery({ baseUrl: 'http://192.168.0.102:5000/api' });
 
 const apiSlice = createApi({
 	reducerPath: 'apiSlice',
 	baseQuery,
-	tagTypes: ['User', 'Chat'],
+	tagTypes: ['User', 'Chat', 'Post'],
 	endpoints: (builder) => ({}),
 });
 

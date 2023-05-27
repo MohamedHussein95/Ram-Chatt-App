@@ -15,6 +15,7 @@ import { pickImageAsync } from '../utils/ImagePicker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCreatePostMutation } from '../store/postApiSlice';
 import { useSelector } from 'react-redux';
+import socket from '../utils/socket';
 
 const BOTTOM_APPBAR_HEIGHT = 50;
 
@@ -42,8 +43,8 @@ const CreatePostScreen = ({ navigation }) => {
 					text: bodyText,
 				},
 			};
-			const res = await createPost(data);
-			console.log(res);
+			await createPost(data);
+			socket.emit('posted');
 		} catch (error) {
 			setLoading(false);
 			console.log(error);
@@ -58,6 +59,7 @@ const CreatePostScreen = ({ navigation }) => {
 			//set image
 			setPhoto(image);
 			const ImageName = image.split('/').pop();
+
 			console.log(ImageName);
 		} catch (error) {
 			console.log(error);
