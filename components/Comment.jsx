@@ -43,9 +43,9 @@ export default Comment;
 
 const styles = StyleSheet.create({
 	comment: {
-		backgroundColor: Colors.primary600,
+		backgroundColor: Colors.dark1,
 		padding: 15,
-		marginVertical: 3,
+		marginVertical: 1,
 	},
 	avatarContainer: {
 		flex: 1,
@@ -73,7 +73,6 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'flex-end',
-		gap: 10,
 	},
 	footerText: {
 		color: Colors.primary400,

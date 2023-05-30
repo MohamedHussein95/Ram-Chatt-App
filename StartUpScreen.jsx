@@ -41,10 +41,17 @@ const StartUpScreen = () => {
 	}, []);
 
 	return (
-		<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+		<View
+			style={{
+				flex: 1,
+				backgroundColor: Colors.primary,
+				justifyContent: 'center',
+				alignItems: 'center',
+			}}
+		>
 			<View>
 				<StatusBar hidden />
-				<ActivityIndicator size={'large'} color={Colors.primary} />
+				<ActivityIndicator size={'small'} color={Colors.white} />
 			</View>
 		</View>
 	);

@@ -44,6 +44,35 @@ const ChatScreen = ({ route, navigation }) => {
 
 	const hideModal = () => setVisible(false);
 
+	//listen for new Chat
+	useEffect(() => {
+		socket.on('new-message', async (id, message) => {
+			if (cId === id) {
+				// Update the chatMessages array by appending the new message
+				setChatMessages((previousMessages) => [
+					...previousMessages,
+					message,
+				]);
+			}
+		});
+		socket.on('typing', async (id) => {
+			if (cId === id) {
+				// Update the typing
+				setTyping(true);
+			}
+		});
+		socket.on('not-typing', async (id) => {
+			if (cId === id) {
+				// Update the typing
+				setTyping(false);
+			}
+		});
+		return () => {
+			socket.off('new-message');
+			socket.emit('not-typing', cId);
+		};
+	}, [socket]);
+
 	//send message
 	const onSend = useCallback(async (messages = []) => {
 		try {
@@ -52,6 +81,7 @@ const ChatScreen = ({ route, navigation }) => {
 				sender: userInfo?._id,
 				content: text,
 				createdAt,
+				userName: userInfo?.userName,
 			};
 
 			// Update the chatMessages array by appending the new message
@@ -64,6 +94,8 @@ const ChatScreen = ({ route, navigation }) => {
 					chatId: cId,
 					body,
 				}).unwrap();
+
+				socket.emit('new-message', cId, messages[0]);
 			} else {
 				const newBody = {
 					users: [userInfo._id, sender?._id],
@@ -71,6 +103,7 @@ const ChatScreen = ({ route, navigation }) => {
 				};
 				const res = await createChat(newBody).unwrap();
 				setCId(res._id);
+				socket.emit('new-chat', sender.id);
 			}
 		} catch (error) {
 			console.log(error);
@@ -171,6 +204,7 @@ const ChatScreen = ({ route, navigation }) => {
 				)}
 				<GiftedChat
 					messages={chatMessages}
+					inverted={true}
 					onSend={(messages) => onSend(messages)}
 					user={{
 						_id: userInfo?._id,
@@ -179,7 +213,7 @@ const ChatScreen = ({ route, navigation }) => {
 					}}
 					isTyping={typing}
 					onInputTextChanged={() => {
-						socket.emit('istyping', chatId, userInfo?._id);
+						socket.emit('typing', cId);
 					}}
 					renderInputToolbar={(props) => customInputToolbar(props)}
 					renderSystemMessage={(props) => customSystemMessage(props)}

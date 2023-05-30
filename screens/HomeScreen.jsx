@@ -1,120 +1,91 @@
-import {
-	ActivityIndicator,
-	FlatList,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-} from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Appbar } from 'react-native-paper';
-import Colors from '../constants/Colors';
 import Post from '../components/Post';
+import Colors from '../constants/Colors';
 import { useGetAllPostsMutation } from '../store/postApiSlice';
-
 import socket from '../utils/socket';
 
 const HomeScreen = () => {
 	const [posts, setPost] = useState([]);
 	const [refreshing, setRefreshing] = useState(false);
 	const [getAllposts] = useGetAllPostsMutation();
-	const [loading, setLoading] = useState(false);
 
 	const getPosts = async () => {
+		setRefreshing(true);
 		try {
-			try {
-				setLoading(true);
-				const posts = await getAllposts().unwrap();
-
-				setPost(posts);
-				setLoading(false);
-			} catch (error) {
-				setLoading(false);
-			}
+			const posts = await getAllposts().unwrap();
+			setPost(posts);
 		} catch (error) {
 			console.log(error);
+		} finally {
+			setRefreshing(false);
 		}
 	};
-	//listen for new posts
+
 	useEffect(() => {
-		socket.on('posted', async () => {
-			await getPosts();
-		});
+		const handleNewPost = async () => {
+			getPosts();
+		};
+
+		socket.on('posted', handleNewPost);
+
 		return () => {
-			socket.off('posted');
+			socket.off('posted', handleNewPost);
 		};
 	}, [socket]);
-	//render posts for first time
+
 	useEffect(() => {
 		getPosts().catch((err) => console.log(err));
 	}, []);
+
+	const EmptyListComponent = (
+		<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+			<View style={{ alignItems: 'center', justifyContent: 'center' }}>
+				<Text style={styles.noPosts}>
+					No Posts at the moment. Be the first to create a post
+				</Text>
+			</View>
+		</View>
+	);
+
 	return (
 		<View style={styles.screen}>
 			<Appbar.Header style={styles.header}>
-				<Appbar.Content title='Home' color={Colors.white} />
-
+				<Appbar.Content title='Home' color='#fff' />
 				<Appbar.Action
 					icon='magnify'
 					onPress={() => {}}
-					color={Colors.white}
+					color='#fff'
 					size={30}
 				/>
 			</Appbar.Header>
-			{loading && (
-				<View
-					style={{
-						flex: 1,
-						justifyContent: 'center',
-						alignItems: 'center',
-					}}
-				>
-					<ActivityIndicator size={'small'} color={Colors.white} />
-				</View>
-			)}
-			{!loading && (
-				<FlatList
-					onRefresh={getPosts}
-					refreshing={refreshing}
-					data={posts}
-					renderItem={({ item }) => <Post key={item?._d} item={item} />}
-					keyExtractor={(item) => item._id}
-					style={{ flex: 1 }}
-					contentContainerStyle={{
-						justifyContent: 'center',
-					}}
-					showsVerticalScrollIndicator={false}
-					ListEmptyComponent={
-						<View
-							style={{
-								flex: 1,
-								justifyContent: 'center',
-								alignItems: 'center',
-							}}
-						>
-							<View
-								style={{
-									alignItems: 'center',
-									justifyContent: 'center',
-								}}
-							>
-								<Text style={styles.noPosts}>
-									No Posts at the moment.Be the first to create a post
-								</Text>
-							</View>
-						</View>
-					}
-				/>
-			)}
+			<FlatList
+				refreshControl={
+					<RefreshControl
+						refreshing={refreshing}
+						onRefresh={getPosts}
+						title='fetching new posts'
+						tintColor={Colors.error}
+						titleColor={Colors.error}
+						colors={[Colors.liked]}
+					/>
+				}
+				data={posts}
+				renderItem={({ item }) => <Post key={item?._d} item={item} />}
+				keyExtractor={(item) => item._id}
+				style={{ flex: 1 }}
+				contentContainerStyle={{ justifyContent: 'center' }}
+				ListEmptyComponent={EmptyListComponent}
+			/>
 		</View>
 	);
 };
 
-export default HomeScreen;
-
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
-		backgroundColor: Colors.dark2,
+		backgroundColor: Colors.dark1,
 	},
 	header: {
 		backgroundColor: Colors.primary,
@@ -123,8 +94,10 @@ const styles = StyleSheet.create({
 	noPosts: {
 		fontSize: 18,
 		fontFamily: 'REGULAR',
-		color: Colors.greyScale600,
+		color: Colors.dark1,
 		textAlign: 'center',
 		marginTop: 100,
 	},
 });
+
+export default HomeScreen;

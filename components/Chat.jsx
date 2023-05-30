@@ -45,7 +45,7 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 
 	useEffect(() => {
 		getLastMessage();
-	}, [getLastMessage]);
+	}, []);
 
 	return (
 		<TouchableOpacity

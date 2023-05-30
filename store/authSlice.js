@@ -47,6 +47,9 @@ const authSlice = createSlice({
 				state.userInfo.profileData.following.unshift(action.payload);
 			}
 		},
+		updatePushToken: (state, action) => {
+			state.userInfo.pushToken = action.payload;
+		},
 	},
 });
 
@@ -57,6 +60,7 @@ export const {
 	updateUserProfile,
 	updateUserBio,
 	updateFollowing,
+	updatePushToken,
 } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -1,5 +1,5 @@
 import { AntDesign, Entypo } from '@expo/vector-icons';
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Colors from '../constants/Colors';
 
@@ -11,6 +11,8 @@ const ProfileSetting = ({
 	titleRight,
 	right,
 	color,
+	size,
+	styleTitle,
 	...props
 }) => {
 	const Right = right;
@@ -21,8 +23,10 @@ const ProfileSetting = ({
 			onPress={onPress}
 		>
 			<View style={styles.iconContainer}>
-				<IconPack name={icon} size={25} color={color} />
-				<Text style={{ ...styles.title, color: color }}>{title}</Text>
+				<IconPack name={icon} size={size || 25} color={color} />
+				<Text style={{ ...styles.title, ...styleTitle, color: color }}>
+					{title}
+				</Text>
 			</View>
 			{right ? (
 				Right
@@ -36,7 +40,7 @@ const ProfileSetting = ({
 	);
 };
 
-export default ProfileSetting;
+export default memo(ProfileSetting);
 
 const styles = StyleSheet.create({
 	container: {

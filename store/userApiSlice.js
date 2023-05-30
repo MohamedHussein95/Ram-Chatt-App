@@ -11,6 +11,13 @@ const usersApiSlice = apiSlice.injectEndpoints({
 				body: data,
 			}),
 		}),
+		registerForPushToken: builder.mutation({
+			query: ({ id, tokenData }) => ({
+				url: `${USERS_URL}/pushToken/${id}`,
+				method: 'POST',
+				body: tokenData,
+			}),
+		}),
 		login: builder.mutation({
 			query: (data) => ({
 				url: `${USERS_URL}/login`,
@@ -45,9 +52,6 @@ const usersApiSlice = apiSlice.injectEndpoints({
 			query: ({ id, file }) => ({
 				url: `${USERS_URL}/upload_profile/${id}`,
 				method: 'PUT',
-				headers: {
-					'Content-Type': 'image/jpeg',
-				},
 				body: file,
 			}),
 		}),
@@ -86,5 +90,6 @@ export const {
 	useUpdateBioMutation,
 	useGetOtherUserProfileMutation,
 	useFollowUserMutation,
+	useRegisterForPushTokenMutation,
 } = usersApiSlice;
 export default usersApiSlice;

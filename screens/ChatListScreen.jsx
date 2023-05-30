@@ -8,6 +8,7 @@ import Chat from '../components/Chat';
 import Colors from '../constants/Colors';
 import { useGetUserChatsMutation } from '../store/chatApiSlice';
 import { setUserChats } from '../store/chatSlice';
+import socket from '../utils/socket';
 
 const ChatListScreen = ({ navigation }) => {
 	const { userInfo } = useSelector((state) => state.auth);
@@ -41,6 +42,19 @@ const ChatListScreen = ({ navigation }) => {
 	useEffect(() => {
 		getChats();
 	}, [userInfo, dispatch]);
+	//listen for new Chat
+	useEffect(() => {
+		socket.on('new-chat', async (id) => {
+			if (userInfo.id === id) {
+				console.log('yes');
+				getChats();
+			}
+		});
+
+		return () => {
+			socket.off('new-chat');
+		};
+	}, [socket]);
 
 	return (
 		<View style={styles.screen}>
@@ -48,53 +62,54 @@ const ChatListScreen = ({ navigation }) => {
 			<Appbar.Header style={styles.header}>
 				<Appbar.Content title='Ram Chatt' color={Colors.white} />
 			</Appbar.Header>
-			{Object.values(chats).length <= 0 ? (
-				<View
-					style={{
-						flex: 1,
-						justifyContent: 'center',
-						alignItems: 'center',
-					}}
-				>
+
+			<FlatList
+				onRefresh={getChats}
+				refreshing={refreshing}
+				data={Object.values(chats)}
+				renderItem={({ item }) => (
+					<Chat
+						key={item}
+						chatId={item?._id}
+						status={item?.status?.blocked}
+						lastMessage={item?.messages[item?.messages.length - 1]}
+						sender={item?.users[0]}
+					/>
+				)}
+				keyExtractor={(item) => item._id}
+				style={{ flex: 1 }}
+				contentContainerStyle={{
+					justifyContent: 'center',
+				}}
+				ListEmptyComponent={
 					<View
 						style={{
-							width: '45%',
-
-							alignItems: 'center',
+							flex: 1,
 							justifyContent: 'center',
+							alignItems: 'center',
 						}}
 					>
-						<Text style={styles.noChats}>
-							You have no chats. Tap the '+' to create one
-						</Text>
+						<View
+							style={{
+								width: '45%',
+
+								alignItems: 'center',
+								justifyContent: 'center',
+							}}
+						>
+							<Text style={styles.noChats}>
+								You have no chats. Tap the '+' to create one
+							</Text>
+						</View>
 					</View>
-				</View>
-			) : (
-				<FlatList
-					onRefresh={getChats}
-					refreshing={refreshing}
-					data={Object.values(chats)}
-					renderItem={({ item }) => (
-						<Chat
-							key={item}
-							chatId={item?._id}
-							status={item?.status?.blocked}
-							lastMessage={item?.messages[item?.messages.length - 1]}
-							sender={item?.users[0]}
-						/>
-					)}
-					keyExtractor={(item) => item._id}
-					style={{ flex: 1 }}
-					contentContainerStyle={{
-						justifyContent: 'center',
-					}}
-				/>
-			)}
+				}
+			/>
 			<FAB
 				icon='plus'
 				color={Colors.white}
 				style={styles.fab}
 				onPress={() => navigation.navigate('NewChatScreen')}
+				mode='elevated'
 			/>
 		</View>
 	);

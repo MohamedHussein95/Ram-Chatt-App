@@ -1,4 +1,13 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+	Modal,
+	Pressable,
+	StyleSheet,
+	Text,
+	TextInput,
+	View,
+} from 'react-native';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useState } from 'react';
 import { Appbar } from 'react-native-paper';
 import Colors from '../constants/Colors';
@@ -10,8 +19,9 @@ import {
 	useGetCommentsMutation,
 } from '../store/postApiSlice';
 import { useSelector } from 'react-redux';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import socket from '../utils/socket';
+import ProfileSetting from '../components/ProfileSetting';
 
 const PostDetailsScreen = ({ route, navigation }) => {
 	const { post } = route.params;
@@ -20,6 +30,10 @@ const PostDetailsScreen = ({ route, navigation }) => {
 	const [comment, setComment] = useState('');
 	const [updatedPost, setUpdatedPost] = useState(post);
 	const [refreshing, setRefreshing] = useState(false);
+	const [modalVisible, setModalVisible] = useState(false);
+	const [state, setState] = useState();
+	const fileUri = 'exp://192.168.0.102:19000';
+
 	const [getComments] = useGetCommentsMutation();
 	const [addComment] = useAddCommentMutation();
 	const getAllComments = async () => {
@@ -62,6 +76,37 @@ const PostDetailsScreen = ({ route, navigation }) => {
 			socket.off('add-comment');
 		};
 	}, [socket, post, updatedPost]);
+	const postStyle = {
+		nameContainer: {
+			flexDirection: 'column',
+			alignItems: 'flex-start',
+			height: 40,
+			gap: -5,
+			marginLeft: 4,
+		},
+		userNameContainer: {
+			width: '100%',
+
+			marginLeft: 0,
+			alignItems: 'flex-start',
+		},
+		fullNameContainer: {},
+		timeContainer: {
+			alignSelf: 'flex-end',
+
+			marginLeft: -10,
+		},
+	};
+	const handleShare = async () => {
+		try {
+			const postUrl = 'https://example.com/post'; // Replace with the actual URL of the post
+
+			await Sharing.shareAsync(postUrl);
+		} catch (error) {
+			console.log('Error sharing post:', error);
+		}
+	};
+
 	return (
 		<View style={styles.screen}>
 			<Appbar.Header style={styles.header}>
@@ -72,10 +117,57 @@ const PostDetailsScreen = ({ route, navigation }) => {
 
 				<Appbar.Action
 					icon='dots-vertical'
-					onPress={() => {}}
+					onPress={() => setModalVisible(true)}
 					color={Colors.white}
 					size={30}
 				/>
+				<Modal
+					visible={modalVisible}
+					onRequestClose={() => {
+						setModalVisible(!modalVisible);
+					}}
+					transparent
+				>
+					<View
+						style={{
+							position: 'absolute',
+							right: 30,
+							top: 20,
+							width: '40%',
+							backgroundColor: Colors.dark3,
+							shadowColor: '#000',
+							shadowOffset: {
+								width: 0,
+								height: 2,
+							},
+							shadowOpacity: 0.25,
+							shadowRadius: 4,
+							elevation: 5,
+						}}
+					>
+						<View style={styles.modalView}>
+							<ProfileSetting
+								title={'Share'}
+								icon={'share-outline'}
+								IconPack={MaterialCommunityIcons}
+								onPress={handleShare}
+								color={Colors.white}
+								size={25}
+								styleTitle={{ fontSize: 16 }}
+							/>
+
+							<ProfileSetting
+								title={'Report'}
+								icon={'flag-outline'}
+								IconPack={MaterialCommunityIcons}
+								onPress={() => {}}
+								color={Colors.white}
+								size={25}
+								styleTitle={{ fontSize: 16 }}
+							/>
+						</View>
+					</View>
+				</Modal>
 			</Appbar.Header>
 
 			<FlatList
@@ -84,8 +176,10 @@ const PostDetailsScreen = ({ route, navigation }) => {
 				ListHeaderComponent={
 					<Post
 						item={updatedPost}
-						style={styles.post}
-						numbOfLines={1000}
+						style={styles.headerPostStyle}
+						numbOfLines={0}
+						poststyle={postStyle}
+						menuVisible={false}
 					/>
 				}
 				data={Object.values(comments)}
@@ -148,7 +242,7 @@ const styles = StyleSheet.create({
 		backgroundColor: Colors.primary,
 		justifyContent: 'space-between',
 	},
-	post: {},
+	headerPostStyle: {},
 	footer: {
 		backgroundColor: Colors.primary,
 		padding: 10,

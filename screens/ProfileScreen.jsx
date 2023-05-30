@@ -102,6 +102,10 @@ const ProfileScreen = ({ navigation }) => {
 			//set image
 			setPhoto(image);
 
+			const data = new FormData();
+			data.append('file', image);
+			data.append('upload_preset', 'RamChatt');
+
 			const res = await uploadProfile({
 				id: userInfo?._id,
 				file: image,
@@ -280,7 +284,7 @@ const ProfileScreen = ({ navigation }) => {
 						<View
 							style={{
 								marginTop: 15,
-								backgroundColor: Colors.primary,
+								backgroundColor: Colors.greyScale500,
 								padding: 10,
 								borderRadius: 100,
 							}}
@@ -358,19 +362,19 @@ const styles = StyleSheet.create({
 		backgroundColor: Colors.primary,
 	},
 	title: {
-		fontSize: 22,
-		color: Colors.primary,
+		fontSize: 18,
+		color: Colors.greyScale500,
 		marginTop: 10,
 		fontFamily: 'MEDIUM',
 	},
 	userName: {
-		fontSize: 17,
-		fontFamily: 'MEDIUM',
+		fontSize: 14,
+		fontFamily: 'REGULAR',
 		letterSpacing: 0.5,
 	},
 	content: {
 		fontSize: 17,
-		color: Colors.primary100,
+		color: Colors.greyScale500100,
 		marginVertical: 5,
 		fontFamily: 'REGULAR',
 	},
@@ -395,7 +399,7 @@ const styles = StyleSheet.create({
 	profileData: { alignItems: 'center' },
 	profileDataText: {
 		fontSize: 18,
-		color: Colors.primary,
+		color: Colors.greyScale500,
 		textAlign: 'center',
 		fontFamily: 'REGULAR',
 	},
@@ -417,10 +421,10 @@ const styles = StyleSheet.create({
 		marginTop: 10,
 		padding: 10,
 		fontFamily: 'REGULAR',
-		color: Colors.primary,
+		color: Colors.greyScale500,
 	},
 	modalContainer: {
-		backgroundColor: Colors.primary,
+		backgroundColor: Colors.dark1,
 		height: '50%',
 		paddingVertical: 15,
 		paddingHorizontal: 15,
@@ -428,7 +432,7 @@ const styles = StyleSheet.create({
 		borderTopRightRadius: 10,
 	},
 	containerStyle: {
-		backgroundColor: Colors.primary,
+		backgroundColor: Colors.dark1,
 		overflow: 'hidden',
 		width: '80%',
 		alignSelf: 'center',
@@ -445,7 +449,7 @@ const styles = StyleSheet.create({
 		borderRadius: 3,
 		alignSelf: 'center',
 		marginTop: 10,
-		backgroundColor: Colors.primary500,
+		backgroundColor: Colors.greyScale500,
 		position: 'absolute',
 		bottom: 10,
 	},
