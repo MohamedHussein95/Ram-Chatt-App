@@ -31,21 +31,30 @@ const Tab = createBottomTabNavigator();
 const TabStack = ({ navigation, route }) => {
 	const { userInfo } = useSelector((state) => state.auth);
 	const [postCount, setPostCount] = useState(0);
+	const [chatCount, setChatCount] = useState(0);
 	const currentTab = getFocusedRouteNameFromRoute(route);
 	useEffect(() => {
-		socket.on('posted', async () => {
+		socket.on('add-post', async () => {
 			if (currentTab !== 'HomeScreen') {
 				setPostCount((prevCount) => prevCount + 1);
 			}
 		});
-
+		socket.on('new-message', async (id, message) => {
+			if (currentTab !== 'ChatListScreen') {
+				setChatCount((prevCount) => prevCount + 1);
+			}
+		});
 		return () => {
-			socket.off('posted');
+			socket.off('add-post');
+			socket.off('new-message');
 		};
 	}, [socket, currentTab]);
 	useEffect(() => {
 		if (currentTab === 'HomeScreen') {
 			setPostCount(0);
+		}
+		if (currentTab === 'ChatListScreen') {
+			setChatCount(0);
 		}
 	}, [navigation, currentTab]);
 	return (
@@ -131,13 +140,8 @@ const TabStack = ({ navigation, route }) => {
 					tabBarBadgeStyle: {
 						backgroundColor: Colors.red,
 						color: Colors.white,
-						fontSize: 12,
-						fontWeight: 'bold',
-						minWidth: 20,
-						height: 20,
-						textAlign: 'center',
-						paddingTop: 2,
 					},
+					tabBarBadge: chatCount > 0 ? String(chatCount) : null,
 				})}
 			/>
 

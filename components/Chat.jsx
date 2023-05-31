@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -6,8 +6,11 @@ import { Avatar, Badge } from 'react-native-paper';
 import Colors from '../constants/Colors';
 import { useGetChatLastMessageMutation } from '../store/chatApiSlice';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import socket from '../utils/socket';
+import { useSelector } from 'react-redux';
 
 const Chat = ({ chatId, status, lastMessage, sender }) => {
+	const { userInfo } = useSelector((state) => state.auth);
 	const date = new Date(lastMessage?.createdAt);
 	const sentTime = chatId ? moment(date).format('HH:mm') : '';
 
@@ -24,7 +27,7 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 		padding: chatId ? 10 : 5,
 		margin: 0,
 		marginVertical: chatId ? 0.5 : 0.5,
-		backgroundColor: status ? Colors.error : Colors.primary600,
+		backgroundColor: status ? Colors.error : Colors.dark1,
 	};
 
 	const getLastMessage = useCallback(async () => {
@@ -42,16 +45,30 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 			});
 		}
 	}, [chatId, getChatLastMessage]);
-
+	useEffect(() => {
+		socket.on('new-message', async (uid, cid, message) => {
+			if (cid === chatId) {
+				getLastMessage();
+			}
+			if (uid.toString() === userInfo?._id.toString() && cid === chatId) {
+				setNewMessageCount((prev) => prev + 1);
+			}
+		});
+		return () => {
+			socket.off('new-message');
+		};
+	}, [socket]);
 	useEffect(() => {
 		getLastMessage();
 	}, []);
-
 	return (
 		<TouchableOpacity
 			style={{ ...styles.chat, ...chatStyle }}
 			activeOpacity={0.8}
-			onPress={() => navigation.navigate('ChatScreen', { sender, chatId })}
+			onPress={() => {
+				setNewMessageCount(0);
+				navigation.navigate('ChatScreen', { sender, chatId });
+			}}
 		>
 			{chatId ? (
 				<View style={styles.wrapper}>
@@ -68,13 +85,13 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 							>
 								{lastMessageData}
 							</Text>
-							{newMessageCount > 0 && (
-								<Badge size={25}>{newMessageCount}</Badge>
-							)}
 						</View>
 					</View>
 					<View style={styles.timeContainer}>
 						<Text style={styles.time}>{sentTime || ''}</Text>
+						{newMessageCount > 0 && (
+							<Badge size={25}>{newMessageCount}</Badge>
+						)}
 					</View>
 				</View>
 			) : (
@@ -122,6 +139,7 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		flex: 1,
+		marginBottom: 10,
 	},
 	title: {
 		fontSize: 18,

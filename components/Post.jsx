@@ -39,7 +39,7 @@ const Post = ({ item, numbOfLines, poststyle, menuVisible = true }) => {
 			const res = await likePost({ id, body }).unwrap();
 			setPost(res); // Assuming the response data is in the 'data' property
 
-			socket.emit('liked', id);
+			socket.emit('liked', res);
 		} catch (error) {
 			console.log(error);
 		}
@@ -53,30 +53,27 @@ const Post = ({ item, numbOfLines, poststyle, menuVisible = true }) => {
 			const id = item?._id;
 			const res = await dislikePost({ id, body }).unwrap();
 			setPost(res);
-			socket.emit('disliked', id);
+			socket.emit('disliked', res);
 		} catch (error) {
 			console.log(error);
 		}
 	};
 
 	useEffect(() => {
-		const handleLiked = async (id) => {
-			if (id === post?._id) {
-				const res = await getAPost(id).unwrap();
+		const handleLiked = async (res) => {
+			if (res._id === post?._id) {
 				setPost(res);
 			}
 		};
 
-		const handleDisliked = async (id) => {
-			if (id === post?._id) {
-				const res = await getAPost(id).unwrap();
+		const handleDisliked = async (res) => {
+			if (res._id === post?._id) {
 				setPost(res);
 			}
 		};
 
-		const handleAddComment = async (id) => {
-			if (id === post?._id) {
-				const res = await getAPost(id).unwrap();
+		const handleAddComment = async (res) => {
+			if (res._id === post?._id) {
 				setPost(res);
 			}
 		};
@@ -93,147 +90,135 @@ const Post = ({ item, numbOfLines, poststyle, menuVisible = true }) => {
 	}, [socket]);
 
 	return (
-		<TouchableOpacity
-			onPress={() => navigation.navigate('PostDetailsScreen', { post })}
-		>
-			<View style={styles.post}>
-				<View style={styles.header}>
-					<Avatar.Image
-						size={30}
-						source={{ uri: post?.createdBy?.avatar }}
-					/>
-					<View
-						style={{
-							...styles.nameContainer,
-							...poststyle?.nameContainer,
-						}}
-					>
-						<View
-							style={{
-								...{
-									flexDirection: 'row',
-									gap: -6,
-									alignItems: 'center',
-								},
-								...poststyle?.fullNameContainer,
-							}}
-						>
-							<Text
-								style={styles.fullName}
-								numberOfLines={1}
-								ellipsizeMode='tail'
-							>
-								{post?.createdBy?.fullName}
-							</Text>
-
-							{true && (
-								<MaterialCommunityIcons
-									name='check-decagram'
-									size={15}
-									color={Colors.liked}
-									style={{ marginLeft: 8 }}
-								/>
-							)}
-						</View>
-						<View
-							style={{
-								...{
-									justifyContent: 'center',
-									alignItems: 'center',
-									width: 80,
-								},
-								...poststyle?.userNameContainer,
-							}}
-						>
-							<Text
-								style={styles.userName}
-								numberOfLines={1}
-								ellipsizeMode='tail'
-							>
-								{post?.createdBy?.userName}
-							</Text>
-						</View>
-					</View>
+		<View style={styles.post}>
+			<View style={styles.header}>
+				<Avatar.Image size={30} source={{ uri: post?.createdBy?.avatar }} />
+				<View
+					style={{
+						...styles.nameContainer,
+						...poststyle?.nameContainer,
+					}}
+				>
 					<View
 						style={{
 							...{
 								flexDirection: 'row',
-								justifyContent: 'flex-start',
+								gap: -6,
 								alignItems: 'center',
-								marginLeft: -5,
 							},
-							...poststyle?.timeContainer,
+							...poststyle?.fullNameContainer,
 						}}
 					>
-						<Text style={styles.bullet}>•</Text>
-						<Text style={styles.time}>{createdAt}</Text>
-					</View>
-
-					{menuVisible && (
-						<View style={styles.menu}>
-							<MaterialCommunityIcons
-								name='dots-vertical'
-								color={Colors.greyScale500}
-								size={25}
-							/>
-						</View>
-					)}
-				</View>
-				<View style={styles.body}>
-					<Text style={styles.title}>{post?.title}</Text>
-					{post?.body?.text && (
 						<Text
-							style={styles.bodyText}
-							numberOfLines={numbOfLines || 4}
+							style={styles.fullName}
+							numberOfLines={1}
+							ellipsizeMode='tail'
 						>
-							{post?.body?.text}
+							{post?.createdBy?.fullName}
 						</Text>
-					)}
-				</View>
-				<View style={styles.footer}>
-					<MaterialCommunityIcons
-						name={liked && !disliked ? 'thumb-up' : 'thumb-up-outline'}
-						size={25}
-						color={liked ? Colors.liked : Colors.greyScale500}
-						onPress={handleLikePosts}
-					/>
-					<Text style={styles.footerText}>
-						{post?.metaData?.likes?.length || '0'}
-					</Text>
-					<MaterialCommunityIcons
-						name={
-							disliked && !liked ? 'thumb-down' : 'thumb-down-outline'
-						}
-						size={25}
-						color={Colors.greyScale500}
-						onPress={handleDisLikePosts}
-					/>
-					<Text style={styles.footerText}>
-						{post.metaData.dislikes.length || '0'}
-					</Text>
-					<MaterialCommunityIcons
-						name='comment-outline'
-						size={25}
-						color={Colors.greyScale500}
-						onPress={() =>
-							navigation.navigate('PostDetailsScreen', { post })
-						}
-					/>
-					<Text style={styles.footerText}>
-						{post.metaData.comments.length || '0'}
-					</Text>
 
-					<MaterialCommunityIcons
-						name='share-outline'
-						size={35}
-						color={Colors.greyScale500}
-					/>
-					<Text style={styles.footerText}>
-						{post.metaData.shares?.length || '0'}
-					</Text>
+						{true && (
+							<MaterialCommunityIcons
+								name='check-decagram'
+								size={15}
+								color={Colors.liked}
+								style={{ marginLeft: 8 }}
+							/>
+						)}
+					</View>
+					<View
+						style={{
+							...{
+								justifyContent: 'center',
+								alignItems: 'center',
+								width: 80,
+							},
+							...poststyle?.userNameContainer,
+						}}
+					>
+						<Text
+							style={styles.userName}
+							numberOfLines={1}
+							ellipsizeMode='tail'
+						>
+							{post?.createdBy?.userName}
+						</Text>
+					</View>
 				</View>
+				<View
+					style={{
+						...{
+							flexDirection: 'row',
+							justifyContent: 'flex-start',
+							alignItems: 'center',
+							marginLeft: -5,
+						},
+						...poststyle?.timeContainer,
+					}}
+				>
+					<Text style={styles.bullet}>•</Text>
+					<Text style={styles.time}>{createdAt}</Text>
+				</View>
+
+				{menuVisible && (
+					<View style={styles.menu}>
+						<MaterialCommunityIcons
+							name='dots-vertical'
+							color={Colors.greyScale500}
+							size={25}
+						/>
+					</View>
+				)}
 			</View>
-		</TouchableOpacity>
+			<View style={styles.body}>
+				<Text style={styles.title}>{post?.title}</Text>
+				{post?.body?.text && (
+					<Text style={styles.bodyText} numberOfLines={numbOfLines || 4}>
+						{post?.body?.text}
+					</Text>
+				)}
+			</View>
+			<View style={styles.footer}>
+				<MaterialCommunityIcons
+					name={liked && !disliked ? 'thumb-up' : 'thumb-up-outline'}
+					size={25}
+					color={liked ? Colors.liked : Colors.greyScale500}
+					onPress={handleLikePosts}
+				/>
+				<Text style={styles.footerText}>
+					{post?.metaData?.likes?.length || '0'}
+				</Text>
+				<MaterialCommunityIcons
+					name={disliked && !liked ? 'thumb-down' : 'thumb-down-outline'}
+					size={25}
+					color={Colors.greyScale500}
+					onPress={handleDisLikePosts}
+				/>
+				<Text style={styles.footerText}>
+					{post.metaData.dislikes.length || '0'}
+				</Text>
+				<MaterialCommunityIcons
+					name='comment-outline'
+					size={25}
+					color={Colors.greyScale500}
+					onPress={() =>
+						navigation.navigate('PostDetailsScreen', { post })
+					}
+				/>
+				<Text style={styles.footerText}>
+					{post.metaData.comments.length || '0'}
+				</Text>
+
+				<MaterialCommunityIcons
+					name='share-outline'
+					size={35}
+					color={Colors.greyScale500}
+				/>
+				<Text style={styles.footerText}>
+					{post.metaData.shares?.length || '0'}
+				</Text>
+			</View>
+		</View>
 	);
 };
 

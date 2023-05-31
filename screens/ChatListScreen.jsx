@@ -44,15 +44,18 @@ const ChatListScreen = ({ navigation }) => {
 	}, [userInfo, dispatch]);
 	//listen for new Chat
 	useEffect(() => {
-		socket.on('new-chat', async (id) => {
-			if (userInfo.id === id) {
-				console.log('yes');
+		socket.on('new-chat', async (sid, uid) => {
+			if (
+				userInfo?._id.toString() === uid?.toString() ||
+				userInfo?._id.toString() === sid?.toString()
+			) {
 				getChats();
 			}
 		});
 
 		return () => {
 			socket.off('new-chat');
+			socket.off('new-message');
 		};
 	}, [socket]);
 

@@ -51,7 +51,7 @@ export default {
 			eas: {
 				projectId: 'e0012066-7a46-429c-8b6b-6da6df211e1b',
 			},
-			host: process.env.HOST,
+			backendHost: process.env.BACKEND_HOST,
 		},
 	},
 };

@@ -5,7 +5,15 @@ import React, {
 	useLayoutEffect,
 	useState,
 } from 'react';
-import { Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import {
+	Image,
+	ImageBackground,
+	RefreshControl,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import {
 	Bubble,
@@ -29,8 +37,9 @@ import socket from '../utils/socket';
 const ChatScreen = ({ route, navigation }) => {
 	const { sender, chatId } = route.params;
 	const [cId, setCId] = useState(chatId);
-
+	const [refreshing, setRefreshing] = useState(false);
 	const [chatMessages, setChatMessages] = useState([]);
+	const giftedChatMessages = chatMessages.slice().reverse();
 
 	const [typing, setTyping] = useState(false);
 
@@ -95,15 +104,16 @@ const ChatScreen = ({ route, navigation }) => {
 					body,
 				}).unwrap();
 
-				socket.emit('new-message', cId, messages[0]);
+				socket.emit('new-message', sender?._id, cId, messages[0]);
 			} else {
 				const newBody = {
 					users: [userInfo._id, sender?._id],
 					messages: [body],
 				};
+
 				const res = await createChat(newBody).unwrap();
 				setCId(res._id);
-				socket.emit('new-chat', sender.id);
+				socket.emit('new-chat', sender?._id, userInfo._id);
 			}
 		} catch (error) {
 			console.log(error);
@@ -133,9 +143,9 @@ const ChatScreen = ({ route, navigation }) => {
 		}
 	}, []);
 
-	//get messages on first render
+	// get messages on first render
 	useEffect(() => {
-		if (cId) {
+		if (cId && chatMessages.length === 0) {
 			getMessages().catch((err) => console.log(err));
 		}
 	}, [cId]);
@@ -175,42 +185,54 @@ const ChatScreen = ({ route, navigation }) => {
 			>
 				{!cId && (
 					<View style={styles.containerStyle}>
-						<TouchableOpacity style={styles.newChatModal}>
-							<Text
-								style={{
-									color: Colors.white,
-									fontFamily: 'BOLD',
-									marginVertical: 15,
-								}}
-							>
-								No messages here yet...
-							</Text>
-							<Text
-								style={{
-									color: Colors.white,
-									fontFamily: 'REGULAR',
-									marginVertical: 15,
-									textAlign: 'center',
-								}}
-							>
-								Send a message or tap the greeting below
-							</Text>
-							<Image
-								source={require('../assets/images/gifs/waving_hand.gif')}
-								resizeMode='contain'
-							/>
-						</TouchableOpacity>
+						<ScrollView
+							style={{ flex: 1 }}
+							refreshControl={
+								<RefreshControl
+									refreshing={refreshing}
+									onRefresh={getChatMessages}
+								/>
+							}
+						>
+							<TouchableOpacity style={styles.newChatModal}>
+								<Text
+									style={{
+										color: Colors.white,
+										fontFamily: 'BOLD',
+										marginVertical: 15,
+									}}
+								>
+									No messages here yet...
+								</Text>
+								<Text
+									style={{
+										color: Colors.white,
+										fontFamily: 'REGULAR',
+										marginVertical: 15,
+										textAlign: 'center',
+									}}
+								>
+									Send a message or tap the greeting below
+								</Text>
+								<Image
+									source={require('../assets/images/gifs/waving_hand.gif')}
+									resizeMode='contain'
+								/>
+							</TouchableOpacity>
+						</ScrollView>
 					</View>
 				)}
 				<GiftedChat
-					messages={chatMessages}
-					inverted={true}
+					messages={giftedChatMessages}
 					onSend={(messages) => onSend(messages)}
 					user={{
 						_id: userInfo?._id,
 						name: userInfo?.lastName,
 						avatar: userInfo?.avatar,
 					}}
+					scrollToBottom
+					forceGetKeyboardHeight
+					bottomOffset={10}
 					isTyping={typing}
 					onInputTextChanged={() => {
 						socket.emit('typing', cId);

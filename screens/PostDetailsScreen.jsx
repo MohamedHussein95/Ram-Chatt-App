@@ -68,7 +68,7 @@ const PostDetailsScreen = ({ route, navigation }) => {
 		socket.on('add-comment', async (id) => {
 			if (id === post?._id) {
 				const res = await getComments(id).unwrap();
-
+				console.log('yes-c');
 				setComments(res);
 			}
 		});

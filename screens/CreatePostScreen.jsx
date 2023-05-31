@@ -43,8 +43,17 @@ const CreatePostScreen = ({ navigation }) => {
 					text: bodyText,
 				},
 			};
-			await createPost(data);
-			socket.emit('posted');
+			const res = await createPost(data).unwrap();
+			const newPost = {
+				...res,
+				createdBy: {
+					fullName: userInfo.fullName,
+					userName: userInfo.userName,
+					avatar: userInfo.avatar,
+					pushToken: userInfo.pushToken,
+				},
+			};
+			socket.emit('add-post', newPost);
 		} catch (error) {
 			setLoading(false);
 			console.log(error);

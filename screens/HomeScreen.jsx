@@ -5,11 +5,14 @@ import Post from '../components/Post';
 import Colors from '../constants/Colors';
 import { useGetAllPostsMutation } from '../store/postApiSlice';
 import socket from '../utils/socket';
+import { useSelector } from 'react-redux';
 
 const HomeScreen = () => {
+	const { userInfo } = useSelector((state) => state.auth);
 	const [posts, setPost] = useState([]);
 	const [refreshing, setRefreshing] = useState(false);
 	const [getAllposts] = useGetAllPostsMutation();
+	const flatListRef = useRef();
 
 	const getPosts = async () => {
 		setRefreshing(true);
@@ -24,14 +27,13 @@ const HomeScreen = () => {
 	};
 
 	useEffect(() => {
-		const handleNewPost = async () => {
-			getPosts();
-		};
-
-		socket.on('posted', handleNewPost);
+		socket.on('add-post', async (res) => {
+			setPost((prev) => [...prev, res]);
+			flatListRef.current.scrollToEnd();
+		});
 
 		return () => {
-			socket.off('posted', handleNewPost);
+			socket.off('add-post');
 		};
 	}, [socket]);
 
@@ -61,6 +63,7 @@ const HomeScreen = () => {
 				/>
 			</Appbar.Header>
 			<FlatList
+				ref={flatListRef}
 				refreshControl={
 					<RefreshControl
 						refreshing={refreshing}
