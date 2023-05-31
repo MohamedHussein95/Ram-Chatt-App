@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import React, { memo } from 'react';
 import Colors from '../constants/Colors';
 import { Avatar } from 'react-native-paper';
 import moment from 'moment';
@@ -39,7 +39,7 @@ const Comment = ({ item }) => {
 	);
 };
 
-export default Comment;
+export default memo(Comment);
 
 const styles = StyleSheet.create({
 	comment: {

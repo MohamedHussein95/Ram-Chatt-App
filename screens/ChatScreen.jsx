@@ -1,31 +1,29 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, {
 	useCallback,
 	useEffect,
 	useLayoutEffect,
+	useRef,
 	useState,
 } from 'react';
 import {
+	FlatList,
 	Image,
 	ImageBackground,
+	KeyboardAvoidingView,
+	Platform,
 	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
+	TouchableOpacity,
 	View,
 } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import {
-	Bubble,
-	Composer,
-	GiftedChat,
-	InputToolbar,
-	Send,
-} from 'react-native-gifted-chat';
 import { Appbar, Avatar } from 'react-native-paper';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { useSelector } from 'react-redux';
 import backgroundImage from '../assets/images/background/wallpaper4.jpg';
+import Bubble from '../components/Bubble';
+import ChatInput from '../components/ChatInput';
 import Colors from '../constants/Colors';
 import {
 	useCreateChatMutation,
@@ -39,13 +37,25 @@ const ChatScreen = ({ route, navigation }) => {
 	const [cId, setCId] = useState(chatId);
 	const [refreshing, setRefreshing] = useState(false);
 	const [chatMessages, setChatMessages] = useState([]);
-	const giftedChatMessages = chatMessages.slice().reverse();
-
+	const [active, setActive] = useState(false);
 	const [typing, setTyping] = useState(false);
 
 	const [visible, setVisible] = useState(true);
 
 	const { userInfo } = useSelector((state) => state.auth);
+
+	const flatListRef = useRef(null);
+	const viewableItemsChanged = useRef(({ viewableItems }) => {
+		// handle changes to viewable items
+		viewableItems.forEach((viewableItem) => {
+			const { item, isViewable } = viewableItem;
+			if (isViewable) {
+				// Access the viewed item and emit the event
+
+				socket.emit('message-viewed', item._id, item.user._id);
+			}
+		});
+	});
 
 	const [getChatMessages] = useGetChatMessagesMutation();
 	const [sendMessages] = useSendMessagesMutation();
@@ -55,13 +65,14 @@ const ChatScreen = ({ route, navigation }) => {
 
 	//listen for new Chat
 	useEffect(() => {
-		socket.on('new-message', async (id, message) => {
-			if (cId === id) {
+		socket.on('new-message', async (uid, cid, message) => {
+			if (cId === cid) {
 				// Update the chatMessages array by appending the new message
 				setChatMessages((previousMessages) => [
 					...previousMessages,
 					message,
 				]);
+				flatListRef.current.scrollToEnd();
 			}
 		});
 		socket.on('typing', async (id) => {
@@ -76,35 +87,53 @@ const ChatScreen = ({ route, navigation }) => {
 				setTyping(false);
 			}
 		});
+		socket.on('user-active', async (id) => {
+			if (id === sender._id) {
+				setActive(true);
+			}
+		});
+		socket.on('user-inactive', async (id) => {
+			if (id === sender._id) {
+				setActive(false);
+			}
+		});
 		return () => {
 			socket.off('new-message');
+			socket.off('user-active');
+			socket.off('user-inactive');
 			socket.emit('not-typing', cId);
 		};
 	}, [socket]);
 
 	//send message
-	const onSend = useCallback(async (messages = []) => {
+	const handleSendMessage = useCallback(async (text) => {
 		try {
-			const { text, createdAt } = messages[0];
+			const message = {
+				_id: Math.random() * 1000,
+				text,
+				createdAt: new Date(),
+				user: {
+					_id: userInfo?._id,
+					name: userInfo?.lastName,
+					avatar: userInfo?.avatar,
+				},
+				delivered: true,
+			};
+			// Update the chatMessages array by appending the new message
+			setChatMessages((previousMessages) => [...previousMessages, message]);
 			const body = {
 				sender: userInfo?._id,
 				content: text,
-				createdAt,
+				createdAt: new Date(),
 				userName: userInfo?.userName,
 			};
-
-			// Update the chatMessages array by appending the new message
-			setChatMessages((previousMessages) => [
-				...previousMessages,
-				messages[0],
-			]);
 			if (cId) {
 				await sendMessages({
 					chatId: cId,
 					body,
 				}).unwrap();
 
-				socket.emit('new-message', sender?._id, cId, messages[0]);
+				socket.emit('new-message', sender?._id, cId, message);
 			} else {
 				const newBody = {
 					users: [userInfo._id, sender?._id],
@@ -145,217 +174,142 @@ const ChatScreen = ({ route, navigation }) => {
 
 	// get messages on first render
 	useEffect(() => {
-		if (cId && chatMessages.length === 0) {
-			getMessages().catch((err) => console.log(err));
+		if (cId) {
+			console.log(cId);
+			getMessages();
 		}
 	}, [cId]);
-
+	useEffect(() => {
+		if (typing) {
+			setChatMessages([
+				...chatMessages,
+				{
+					id: '5464664565654',
+					text: 'typing...',
+					createdAt: null,
+					user: null,
+				},
+			]);
+		} else {
+			const index = chatMessages.findIndex((m) => m._id === '5464664565654');
+			const updatedChatMessages = [...chatMessages];
+			setChatMessages(updatedChatMessages.splice(index, 0));
+		}
+	}, [typing]);
 	return (
-		<View style={styles.screen}>
-			<Appbar.Header style={styles.header}>
-				<Appbar.BackAction
-					onPress={() => navigation.pop()}
-					color={Colors.white}
-				/>
-				<Avatar.Image
-					source={{ uri: sender?.avatar }}
-					size={40}
-					style={{ marginRight: 10 }}
-				/>
-
-				<Appbar.Content
-					title={sender?.fullName}
-					color={Colors.white}
-					onPress={() =>
-						navigation.navigate('UserDetailsScreen', { sender })
-					}
-				/>
-
-				<Appbar.Action
-					icon='dots-vertical'
-					onPress={() => {}}
-					color={Colors.white}
-					size={30}
-				/>
-			</Appbar.Header>
-
-			<ImageBackground
-				source={backgroundImage}
-				style={styles.backgroundImage}
-			>
-				{!cId && (
-					<View style={styles.containerStyle}>
-						<ScrollView
-							style={{ flex: 1 }}
-							refreshControl={
-								<RefreshControl
-									refreshing={refreshing}
-									onRefresh={getChatMessages}
-								/>
-							}
-						>
-							<TouchableOpacity style={styles.newChatModal}>
-								<Text
-									style={{
-										color: Colors.white,
-										fontFamily: 'BOLD',
-										marginVertical: 15,
-									}}
-								>
-									No messages here yet...
-								</Text>
-								<Text
-									style={{
-										color: Colors.white,
-										fontFamily: 'REGULAR',
-										marginVertical: 15,
-										textAlign: 'center',
-									}}
-								>
-									Send a message or tap the greeting below
-								</Text>
-								<Image
-									source={require('../assets/images/gifs/waving_hand.gif')}
-									resizeMode='contain'
-								/>
-							</TouchableOpacity>
-						</ScrollView>
-					</View>
-				)}
-				<GiftedChat
-					messages={giftedChatMessages}
-					onSend={(messages) => onSend(messages)}
-					user={{
-						_id: userInfo?._id,
-						name: userInfo?.lastName,
-						avatar: userInfo?.avatar,
-					}}
-					scrollToBottom
-					forceGetKeyboardHeight
-					bottomOffset={10}
-					isTyping={typing}
-					onInputTextChanged={() => {
-						socket.emit('typing', cId);
-					}}
-					renderInputToolbar={(props) => customInputToolbar(props)}
-					renderSystemMessage={(props) => customSystemMessage(props)}
-					renderAvatarOnTop
-					renderUsernameOnMessage
-					alignTop
-					renderSend={(props) => (
-						<Send {...props}>
-							<Ionicons name='send' size={26} color={Colors.white} />
-						</Send>
-					)}
-					renderBubble={(props) => (
-						<Bubble
-							{...props}
-							wrapperStyle={{
-								left: {
-									backgroundColor: Colors.greyScale700,
-								},
-								right: {
-									backgroundColor: Colors.primary,
-								},
-							}}
-							textStyle={{
-								left: {
-									color: Colors.white,
-								},
-								right: {
-									color: Colors.white,
-								},
-							}}
+		<KeyboardAvoidingView
+			style={styles.screen}
+			behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+			keyboardVerticalOffset={100}
+		>
+			<View style={styles.screen}>
+				<Appbar.Header style={styles.header}>
+					<Appbar.BackAction
+						onPress={() => navigation.pop()}
+						color={Colors.white}
+					/>
+					<View>
+						<Avatar.Image
+							source={{ uri: sender?.avatar }}
+							size={40}
+							style={{ marginRight: 10 }}
 						/>
-					)}
-				/>
-			</ImageBackground>
-		</View>
-	);
-};
+						{active && (
+							<View
+								style={{
+									width: 10,
+									height: 10,
+									backgroundColor: Colors.success,
+									position: 'absolute',
+									right: 10,
+									top: 0,
+									borderRadius: 50,
+								}}
+							/>
+						)}
+					</View>
 
-const customInputToolbar = (props) => {
-	return (
-		<InputToolbar
-			{...props}
-			primaryStyle={{ alignItems: 'center' }}
-			containerStyle={{
-				backgroundColor: Colors.primary,
-				borderTopColor: Colors.primary600,
-				borderTopWidth: 1,
-				padding: 8,
-			}}
-			accessoryStyle={{
-				display: 'flex',
-				alignItems: 'center',
-				marginLeft: 8,
-			}}
-			renderComposer={() => (
-				<Composer
-					{...props}
-					textInputStyle={{ color: Colors.white }} // Set the desired text color here
-					multiline={true}
-					keyboardAppearance='dark'
-					textInputProps={{
-						...props.textInputProps,
-						autoCapitalize: 'sentences', // Set the desired autoCapitalize value here
-					}}
-				/>
-			)}
-			// renderAccessory={() => (
-			// 	<View
-			// 		style={{
-			// 			backgroundColor: 'red',
-			// 			width: '100%',
-			// 			justifyContent: 'space-between',
-			// 			flexDirection: 'row',
-			// 		}}
-			// 	>
-			// 		<IconButton
-			// 			icon='microphone'
-			// 			onPress={() => {
-			// 				// Handle microphone button press
-			// 			}}
-			// 			size={24}
-			// 			color={Colors.white}
-			// 		/>
-			// 		<IconButton
-			// 			icon={({ size, color }) => (
-			// 				<Ionicons name='happy-outline' size={size} color={color} />
-			// 			)}
-			// 			onPress={() => {
-			// 				// Handle emoji button press
-			// 			}}
-			// 			size={24}
-			// 			color={Colors.white}
-			// 		/>
-			// 		<IconButton
-			// 			icon={({ size, color }) => (
-			// 				<Ionicons
-			// 					name='images-outline'
-			// 					size={size}
-			// 					color={Colors.white}
-			// 				/>
-			// 			)}
-			// 			onPress={() => {
-			// 				// Handle gallery button press
-			// 			}}
-			// 			size={24}
-			// 			color={Colors.white}
-			// 		/>
-			// 	</View>
-			// )}
-		/>
-	);
-};
-const customSystemMessage = () => {
-	return (
-		<View style={styles.ChatMessageSytemMessageContainer}>
-			<Icon name='lock' color='#9d9d9d' size={16} />
-			<Text style={styles.ChatMessageSystemMessageText}>
-				Messages are end-to-end encrypted. Not even Ramchatt can see them
-			</Text>
-		</View>
+					<Appbar.Content
+						title={sender?.fullName}
+						color={Colors.white}
+						onPress={() =>
+							navigation.navigate('UserDetailsScreen', { sender })
+						}
+					/>
+
+					<Appbar.Action
+						icon='dots-vertical'
+						onPress={() => {}}
+						color={Colors.white}
+						size={30}
+					/>
+				</Appbar.Header>
+
+				<ImageBackground
+					source={backgroundImage}
+					style={styles.backgroundImage}
+				>
+					{!cId && (
+						<View style={styles.containerStyle}>
+							<ScrollView
+								style={{ flex: 1 }}
+								refreshControl={
+									<RefreshControl
+										refreshing={refreshing}
+										onRefresh={getChatMessages}
+									/>
+								}
+							>
+								<TouchableOpacity
+									style={styles.newChatModal}
+									onPress={() => handleSendMessage('Hey 👋')}
+									activeOpacity={0.7}
+								>
+									<Text
+										style={{
+											color: Colors.white,
+											fontFamily: 'BOLD',
+											marginVertical: 15,
+										}}
+									>
+										No messages here yet...
+									</Text>
+									<Text
+										style={{
+											color: Colors.white,
+											fontFamily: 'REGULAR',
+											marginVertical: 15,
+											textAlign: 'center',
+										}}
+									>
+										Send a message or tap the greeting below
+									</Text>
+									<Image
+										source={require('../assets/images/gifs/waving_hand.gif')}
+										resizeMode='contain'
+									/>
+								</TouchableOpacity>
+							</ScrollView>
+						</View>
+					)}
+					<FlatList
+						ref={flatListRef}
+						onRefresh={getChatMessages}
+						refreshing={refreshing}
+						data={chatMessages}
+						renderItem={({ item }) => <Bubble key={item} item={item} />}
+						keyExtractor={(item) => item._id}
+						style={{ flex: 1 }}
+						contentContainerStyle={{
+							justifyContent: 'center',
+						}}
+						onViewableItemsChanged={viewableItemsChanged.current}
+						viewabilityConfig={{ itemVisiblePercentThreshold: 50 }} // adjust threshold as needed
+					/>
+					<ChatInput onPress={(text) => handleSendMessage(text)} />
+				</ImageBackground>
+			</View>
+		</KeyboardAvoidingView>
 	);
 };
 

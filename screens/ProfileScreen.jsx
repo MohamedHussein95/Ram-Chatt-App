@@ -2,6 +2,7 @@ import {
 	AntDesign,
 	Feather,
 	Ionicons,
+	MaterialCommunityIcons,
 	MaterialIcons,
 } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
@@ -16,6 +17,7 @@ import {
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import Modal from 'react-native-modal';
+import * as Updates from 'expo-updates';
 import {
 	Appbar,
 	Avatar,
@@ -54,7 +56,19 @@ const ProfileScreen = ({ navigation }) => {
 		navigation.navigate(navigateTo);
 	});
 	const [isModalVisible, setModalVisible] = useState(false);
+	async function onFetchUpdateAsync() {
+		try {
+			const update = await Updates.checkForUpdateAsync();
 
+			if (update.isAvailable) {
+				await Updates.fetchUpdateAsync();
+				await Updates.reloadAsync();
+			}
+		} catch (error) {
+			// You can also add an alert() to see the error message in case of an error when fetching updates.
+			alert(`Error fetching latest Expo update: ${error}`);
+		}
+	}
 	const handleBioUpdate = async () => {
 		const body = { body: bio };
 		const res = await updateBio({ id: userInfo?._id, body }).unwrap();
@@ -157,7 +171,7 @@ const ProfileScreen = ({ navigation }) => {
 						style={styles.modal}
 					>
 						<View style={styles.modalContainer}>
-							<ScrollView>
+							<ScrollView showsVerticalScrollIndicator={false}>
 								<ProfileSetting
 									title={'Edit Profile'}
 									icon={'user'}
@@ -191,6 +205,13 @@ const ProfileScreen = ({ navigation }) => {
 									icon={'people-outline'}
 									IconPack={Ionicons}
 									color={Colors.white}
+								/>
+								<ProfileSetting
+									title={'Look For Updates'}
+									icon={'update'}
+									IconPack={MaterialCommunityIcons}
+									color={Colors.white}
+									onPress={onFetchUpdateAsync}
 								/>
 								<TouchableOpacity
 									style={styles.iconContainer}

@@ -5,7 +5,6 @@ const baseQuery = fetchBaseQuery({
 	baseUrl: Constants.manifest?.extra?.backendHost,
 });
 
-console.log(Constants.manifest?.extra);
 const apiSlice = createApi({
 	reducerPath: 'apiSlice',
 	baseQuery,

@@ -1,20 +1,21 @@
 import 'dotenv/config';
+
 export default {
 	expo: {
 		name: 'Ram Chatt',
 		slug: 'ram-chatt',
 		version: '1.0.0',
 		orientation: 'portrait',
-		icon: './assets/icon.png',
+		icon: './assets/logo.png',
 		userInterfaceStyle: 'light',
 		splash: {
-			image: './assets/splash.png',
+			image: './assets/splashScreen.png',
 			resizeMode: 'cover',
 			backgroundColor: '#181A20',
 		},
 		updates: {
 			fallbackToCacheTimeout: 0,
-			url: '',
+			url: 'exp://u.expo.dev/e0012066-7a46-429c-8b6b-6da6df211e1b?channel-name=main&runtime-version=exposdk%3A0.0.0',
 		},
 		assetBundlePatterns: ['**/*'],
 		ios: {
@@ -22,8 +23,8 @@ export default {
 		},
 		android: {
 			adaptiveIcon: {
-				foregroundImage: './assets/adaptive-icon.png',
-				backgroundColor: '#ffffff',
+				foregroundImage: './assets/adaptive-logo.png',
+				backgroundColor: '#181A20',
 			},
 			permissions: [
 				'INTERNET',
@@ -43,7 +44,13 @@ export default {
 			[
 				'expo-notifications',
 				{
-					color: '#ffffff',
+					color: '#181A20',
+				},
+			],
+			[
+				'expo-updates',
+				{
+					username: 'legendman',
 				},
 			],
 		],

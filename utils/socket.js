@@ -1,3 +1,3 @@
 import { io } from 'socket.io-client';
-const socket = io('http://192.168.0.102:5000');
+const socket = io('https://ramchatt.onrender.com');
 export default socket;

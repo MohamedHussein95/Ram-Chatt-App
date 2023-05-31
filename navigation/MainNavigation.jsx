@@ -24,6 +24,7 @@ import UserDetailsScreen from '../screens/UserDetailsScreen';
 import { updatePushToken } from '../store/authSlice';
 import { useRegisterForPushTokenMutation } from '../store/userApiSlice';
 import socket from '../utils/socket';
+import { AppState } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,6 +34,7 @@ const TabStack = ({ navigation, route }) => {
 	const [postCount, setPostCount] = useState(0);
 	const [chatCount, setChatCount] = useState(0);
 	const currentTab = getFocusedRouteNameFromRoute(route);
+
 	useEffect(() => {
 		socket.on('add-post', async () => {
 			if (currentTab !== 'HomeScreen') {
@@ -57,6 +59,7 @@ const TabStack = ({ navigation, route }) => {
 			setChatCount(0);
 		}
 	}, [navigation, currentTab]);
+
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => ({
@@ -171,6 +174,9 @@ function MainStack() {
 	const [notification, setNotification] = useState(false);
 	const notificationListener = useRef();
 	const responseListener = useRef();
+	const appState = useRef(AppState.currentState);
+	const [appStateVisible, setAppStateVisible] = useState(appState.current);
+
 	const dispatch = useDispatch();
 	useEffect(() => {
 		registerForPushNotificationsAsync().then((token) =>
@@ -215,7 +221,29 @@ function MainStack() {
 		};
 		registerPushToken();
 	}, [expoPushToken]);
+	useEffect(() => {
+		const handleAppStateChange = (nextAppState) => {
+			if (
+				appState.current.match(/background/) &&
+				nextAppState !== 'background'
+			) {
+				socket.emit('user-active', userInfo._id);
+			} else if (nextAppState === 'background') {
+				socket.emit('user-inactive', userInfo._id);
+			}
+			appState.current = nextAppState;
+			setAppStateVisible(appState.current);
+		};
 
+		const subscription = AppState.addEventListener(
+			'change',
+			handleAppStateChange
+		);
+
+		return () => {
+			subscription.remove();
+		};
+	}, []);
 	return (
 		<Stack.Navigator
 			screenOptions={{

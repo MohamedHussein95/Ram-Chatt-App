@@ -1,6 +1,6 @@
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import moment from 'moment';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Avatar, Badge } from 'react-native-paper';
 import Colors from '../constants/Colors';
@@ -126,7 +126,7 @@ const Chat = ({ chatId, status, lastMessage, sender }) => {
 	);
 };
 
-export default Chat;
+export default memo(Chat);
 
 const styles = StyleSheet.create({
 	chat: {

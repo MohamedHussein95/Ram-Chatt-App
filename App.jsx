@@ -7,6 +7,10 @@ import { Provider } from 'react-redux';
 import fonts from './constants/Fonts';
 import AppNavigation from './navigation/AppNavigation';
 import store from './store/store';
+import * as SplashScreen from 'expo-splash-screen';
+import { useCallback } from 'react';
+
+SplashScreen.preventAutoHideAsync();
 
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
@@ -19,18 +23,20 @@ Notifications.setNotificationHandler({
 export default function App() {
 	const [fontsLoaded] = useFonts(fonts);
 
-	if (fontsLoaded) {
-		console.log('fonts loaded');
-	}
+	const onLayoutRootView = useCallback(async () => {
+		if (fontsLoaded) {
+			await SplashScreen.hideAsync();
+		}
+	}, [fontsLoaded]);
 
 	if (!fontsLoaded) {
-		console.log('fonts not loaded');
+		return null;
 	}
 	return (
 		<>
 			<Provider store={store}>
 				<PaperProvider>
-					<AppNavigation />
+					<AppNavigation onReady={onLayoutRootView} />
 				</PaperProvider>
 			</Provider>
 			<Toast />

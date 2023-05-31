@@ -16,7 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 const Post = ({ item, numbOfLines, poststyle, menuVisible = true }) => {
 	const { userInfo } = useSelector((state) => state.auth);
 	const [post, setPost] = useState(item);
-
+	const [active, setActive] = useState(false);
 	const liked = post?.metaData?.likes?.includes(userInfo?._id);
 	const disliked = post?.metaData?.dislikes?.includes(userInfo?._id);
 
@@ -77,22 +77,55 @@ const Post = ({ item, numbOfLines, poststyle, menuVisible = true }) => {
 				setPost(res);
 			}
 		};
+		const handleUserActive = async (id) => {
+			if (id === post?.createdBy._id) {
+				setActive(true);
+			}
+		};
+		const handleUserInactive = async (id) => {
+			if (id === post?.createdBy._id) {
+				setActive(false);
+			}
+		};
 
 		socket.on('liked', handleLiked);
 		socket.on('disliked', handleDisliked);
 		socket.on('add-comment', handleAddComment);
+		socket.on('user-active', handleUserActive);
+		socket.on('user-inactive', handleUserInactive);
 
 		return () => {
 			socket.off('liked', handleLiked);
 			socket.off('disliked', handleDisliked);
 			socket.off('add-comment', handleAddComment);
+			socket.off('user-active', handleUserActive);
+			socket.off('user-inactive', handleUserInactive);
 		};
 	}, [socket]);
 
 	return (
 		<View style={styles.post}>
 			<View style={styles.header}>
-				<Avatar.Image size={30} source={{ uri: post?.createdBy?.avatar }} />
+				<View>
+					<Avatar.Image
+						size={30}
+						source={{ uri: post?.createdBy?.avatar }}
+					/>
+					{active && (
+						<View
+							style={{
+								width: 10,
+								height: 10,
+								backgroundColor: Colors.success,
+								position: 'absolute',
+								right: 0,
+								top: 0,
+								borderRadius: 50,
+							}}
+						/>
+					)}
+				</View>
+
 				<View
 					style={{
 						...styles.nameContainer,
@@ -117,7 +150,7 @@ const Post = ({ item, numbOfLines, poststyle, menuVisible = true }) => {
 							{post?.createdBy?.fullName}
 						</Text>
 
-						{true && (
+						{post.createdBy?.verified && (
 							<MaterialCommunityIcons
 								name='check-decagram'
 								size={15}

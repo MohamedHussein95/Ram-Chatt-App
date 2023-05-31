@@ -67,7 +67,7 @@ const Input = ({
 	);
 };
 
-export default Input;
+export default memo(Input);
 
 const styles = StyleSheet.create({
 	inputs: {
