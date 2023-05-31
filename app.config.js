@@ -15,7 +15,7 @@ export default {
 		},
 		updates: {
 			fallbackToCacheTimeout: 0,
-			url: 'exp://u.expo.dev/e0012066-7a46-429c-8b6b-6da6df211e1b?channel-name=main&runtime-version=exposdk%3A0.0.0',
+			url: process.env.UPDATE_URL,
 		},
 		assetBundlePatterns: ['**/*'],
 		ios: {
@@ -56,7 +56,7 @@ export default {
 		],
 		extra: {
 			eas: {
-				projectId: 'e0012066-7a46-429c-8b6b-6da6df211e1b',
+				projectId: process.env.PROJECT_ID,
 			},
 			backendHost: process.env.BACKEND_HOST,
 		},
